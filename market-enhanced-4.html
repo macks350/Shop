@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Всёрынок</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --ink:#1c1a15;
+    --cream:#f3ecdb;
+    --teal:#1e4b43;
+    --teal-deep:#123530;
+    --mustard:#d9a521;
+    --rust:#b8492f;
+    --line: rgba(28,26,21,0.16);
+    --page-bg: var(--cream);
+    --page-fg: var(--ink);
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  body.theme-dark{
+    --page-bg:#0b0b0b;
+    --page-fg:#f2f2f2;
+    --line: rgba(255,255,255,0.16);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--page-bg); color:var(--page-fg);
+    font-family:'Manrope', sans-serif; line-height:1.5;
+    transition: background .35s var(--ease-out), color .35s var(--ease-out);
+  }
+  h1,h2,h3,.serif{ font-family:'PT Serif', serif; }
+  button{ font-family:inherit; cursor:pointer; transition:transform .18s var(--ease-spring), opacity .2s ease, background .2s ease, box-shadow .2s ease; }
+  button:active{ transform:scale(0.94); }
+  input, select, textarea{ font-family:inherit; transition: border-color .2s ease, box-shadow .2s ease; }
+  input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(30,75,67,0.15); }
+
+  header{
+    position:sticky; top:0; z-index:50;
+    background:var(--page-bg); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; flex-wrap:wrap; gap:12px;
+    transition: background .35s ease;
+    backdrop-filter: blur(8px);
+  }
+  .logo{ font-family:'PT Serif', serif; font-weight:700; font-size:1.4rem; letter-spacing:-0.02em; }
+  .logo span{ color:var(--rust); }
+
+  .tabs{ display:flex; gap:6px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-behavior:smooth; padding-bottom:2px; max-width:100%; }
+  .tabs::-webkit-scrollbar{ height:4px; }
+  .tabs::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  .tabs .tab-btn, .tabs a.tab-btn{ flex:0 0 auto; }
+  .tab-btn{
+    background:none; border:1px solid var(--line); border-radius:3px;
+    padding:8px 14px; font-weight:600; font-size:0.88rem; color:var(--page-fg);
+    transition: background .2s ease, transform .18s var(--ease-spring), border-color .2s ease, color .2s ease;
+  }
+  .tab-btn:hover{ transform:translateY(-1px); }
+  .tab-btn:active{ background:var(--line); transform:scale(0.96); }
+  .tab-btn.active{ background:var(--teal); color:var(--cream); border-color:var(--teal); }
+
+  .user-box{ display:flex; align-items:center; gap:10px; font-size:0.9rem; flex-wrap:wrap; }
+  .badge{ background:var(--mustard); color:var(--ink); padding:4px 10px; border-radius:20px; font-weight:700; font-size:0.78rem; animation: badgePop .4s var(--ease-spring); }
+  @keyframes badgePop{ from{ transform:scale(0.7); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .btn{ background:var(--rust); color:var(--cream); border:none; border-radius:3px; padding:9px 16px; font-weight:700; font-size:0.9rem; }
+  .btn:hover{ filter:brightness(1.08); box-shadow:0 4px 12px rgba(184,73,47,0.3); }
+  .btn-ghost{ background:none; border:1px solid var(--line); border-radius:3px; padding:9px 16px; font-weight:600; font-size:0.9rem; }
+  .btn-ghost:hover{ background:var(--line); }
+
+  main{ max-width:960px; margin:0 auto; padding:36px 28px 80px; }
+  .tab-section{ display:none; }
+  .tab-section.active{ display:block; animation: sectionIn .4s var(--ease-out); }
+  @keyframes sectionIn{
+    from{ opacity:0; transform:translateY(12px) scale(0.98); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .tab-section h2{ font-size:1.7rem; margin:0 0 20px; }
+  .hint{ font-size:0.85rem; opacity:0.65; margin-top:6px; }
+
+  .sort-row{ display:flex; justify-content:flex-end; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .sort-row select{ padding:8px 12px; border:1px solid var(--line); border-radius:3px; background:var(--page-bg); color:var(--page-fg); font-size:0.85rem; }
+
+  .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  @media(max-width:700px){ .grid{ grid-template-columns:1fr; } }
+
+  /* Arrival animation — truck-like approach */
+  .card, .cart-line, .req-item, .review-card, .admin-row, .log-line, .user-row{
+    animation: arriveIn .75s var(--ease-out) backwards;
+  }
+  @keyframes arriveIn{
+    0%{ opacity:0; transform:translateX(80px) translateY(20px) scale(0.88) rotate(-1.5deg); filter:blur(4px); }
+    55%{ opacity:1; filter:blur(0); }
+    75%{ transform:translateX(-6px) translateY(0) scale(1.02) rotate(0.4deg); }
+    100%{ opacity:1; transform:translateX(0) translateY(0) scale(1) rotate(0); filter:blur(0); }
+  }
+  .card{ background:var(--page-bg); padding:20px; display:flex; flex-direction:column; gap:8px; transition:transform .22s var(--ease-out), box-shadow .22s ease; }
+  .card:hover, .card:active{ transform:translateY(-4px) scale(1.01); box-shadow:0 12px 28px rgba(0,0,0,0.14); position:relative; z-index:1; }
+  .card:nth-child(1), .cart-line:nth-child(1), .req-item:nth-child(1), .review-card:nth-child(1), .admin-row:nth-child(1), .log-line:nth-child(1), .user-row:nth-child(1){ animation-delay:.04s; }
+  .card:nth-child(2), .cart-line:nth-child(2), .req-item:nth-child(2), .review-card:nth-child(2), .admin-row:nth-child(2), .log-line:nth-child(2), .user-row:nth-child(2){ animation-delay:.10s; }
+  .card:nth-child(3), .cart-line:nth-child(3), .req-item:nth-child(3), .review-card:nth-child(3), .admin-row:nth-child(3), .log-line:nth-child(3), .user-row:nth-child(3){ animation-delay:.16s; }
+  .card:nth-child(4), .cart-line:nth-child(4), .req-item:nth-child(4), .review-card:nth-child(4), .admin-row:nth-child(4), .log-line:nth-child(4), .user-row:nth-child(4){ animation-delay:.22s; }
+  .card:nth-child(5), .cart-line:nth-child(5), .req-item:nth-child(5), .review-card:nth-child(5), .admin-row:nth-child(5), .log-line:nth-child(5), .user-row:nth-child(5){ animation-delay:.28s; }
+  .card:nth-child(6), .cart-line:nth-child(6), .req-item:nth-child(6), .review-card:nth-child(6), .admin-row:nth-child(6), .log-line:nth-child(6), .user-row:nth-child(6){ animation-delay:.34s; }
+  .card:nth-child(7), .cart-line:nth-child(7), .req-item:nth-child(7), .review-card:nth-child(7), .admin-row:nth-child(7), .log-line:nth-child(7), .user-row:nth-child(7){ animation-delay:.40s; }
+  .card:nth-child(8), .cart-line:nth-child(8), .req-item:nth-child(8), .review-card:nth-child(8), .admin-row:nth-child(8), .log-line:nth-child(8), .user-row:nth-child(8){ animation-delay:.46s; }
+  .card:nth-child(9){ animation-delay:.52s; } .card:nth-child(10){ animation-delay:.58s; }
+  .card:nth-child(11){ animation-delay:.64s; } .card:nth-child(12){ animation-delay:.70s; }
+  .card:nth-child(13){ animation-delay:.76s; } .card:nth-child(14){ animation-delay:.82s; }
+  .card:nth-child(15){ animation-delay:.88s; } .card:nth-child(16){ animation-delay:.94s; }
+  .card:nth-child(17){ animation-delay:1.00s; } .card:nth-child(18){ animation-delay:1.06s; }
+  .card:nth-child(19){ animation-delay:1.12s; } .card:nth-child(20){ animation-delay:1.18s; }
+  .card:nth-child(n+21){ animation-delay:1.2s; }
+
+  .card h3{ margin:0; font-size:1.05rem; }
+  .card .price{ font-family:'PT Serif',serif; font-weight:700; font-size:1.1rem; }
+  .card .buy-row{ display:flex; gap:8px; align-items:center; margin-top:6px; flex-wrap:wrap; }
+  .card .buy-row input{ width:90px; padding:8px; border:1px solid var(--line); border-radius:3px; background:var(--page-bg); color:var(--page-fg); }
+  .card .buy-row button{ background:var(--ink); color:var(--cream); border:none; border-radius:3px; padding:8px 14px; font-weight:600; font-size:0.85rem; }
+  .empty{ opacity:0.6; font-size:0.9rem; }
+
+  .review-card{ border:1px solid var(--line); border-radius:4px; padding:16px; margin-bottom:12px; transition:transform .2s ease, box-shadow .2s ease; }
+  .review-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.08); }
+  .review-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .review-stars{ color:var(--mustard); letter-spacing:2px; }
+  .review-card.negative .review-stars{ color:var(--rust); }
+  .review-name{ font-weight:700; }
+  .review-text{ margin:0; opacity:0.85; font-size:0.92rem; }
+
+  .form-box{ display:flex; flex-direction:column; gap:10px; max-width:420px; }
+  .form-box input, .form-box textarea, .form-box select{ padding:11px 14px; border:1px solid var(--line); border-radius:3px; background:var(--page-bg); color:var(--page-fg); }
+
+  .req-item, .cart-line, .admin-row, .user-row, .log-line{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:14px 0; border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  .req-actions, .cart-actions, .admin-actions, .user-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .req-actions button, .cart-actions button, .admin-actions button, .user-actions button{
+    border:1px solid var(--line); background:#fff; border-radius:3px; padding:6px 12px; font-size:0.82rem; font-weight:600;
+  }
+  body.theme-dark .req-actions button, body.theme-dark .cart-actions button,
+  body.theme-dark .admin-actions button, body.theme-dark .user-actions button{ background:#1a1a1a; color:var(--page-fg); }
+  .req-actions .accept, .admin-actions .accept{ background:var(--teal); color:var(--cream); border-color:var(--teal); }
+  .req-actions .decline, .admin-actions .decline, .user-actions .block{ background:var(--rust); color:var(--cream); border-color:var(--rust); }
+  .user-actions .unblock{ background:var(--teal); color:var(--cream); border-color:var(--teal); }
+
+  .cart-total-row{ display:flex; justify-content:space-between; padding-top:16px; font-family:'PT Serif',serif; font-size:1.2rem; }
+
+  /* overlay */
+  .overlay{ position:fixed; inset:0; background:rgba(28,26,21,0.5); display:flex; align-items:center; justify-content:center; z-index:200; animation: overlayIn .25s ease; backdrop-filter:blur(3px); }
+  .overlay.hidden{ display:none; }
+  @keyframes overlayIn{ from{ opacity:0; } to{ opacity:1; } }
+  .login-box{ background:var(--page-bg); color:var(--page-fg); padding:28px; border-radius:8px; width:min(340px,92vw); display:flex; flex-direction:column; gap:10px; animation: popIn .35s var(--ease-spring); box-shadow:0 20px 50px rgba(0,0,0,0.25); }
+  @keyframes popIn{ from{ opacity:0; transform:scale(0.88) translateY(16px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+  .login-box input, .login-box select{ padding:11px 14px; border:1px solid var(--line); border-radius:3px; background:var(--page-bg); color:var(--page-fg); }
+
+  /* feed panel */
+  .feed-panel{
+    position:fixed; top:0; right:-360px; width:340px; height:100%;
+    background:var(--teal-deep); color:var(--cream);
+    box-shadow:-12px 0 32px rgba(0,0,0,0.25); z-index:150;
+    display:flex; flex-direction:column; padding:22px; transition:right .35s var(--ease-out);
+  }
+  .feed-panel.open{ right:0; }
+  .feed-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .feed-head button{ background:none; border:none; color:var(--cream); font-size:1.5rem; line-height:1; }
+  #feedList{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:0.85rem; }
+  .feed-line{ border-bottom:1px solid rgba(243,236,219,0.15); padding-bottom:8px; animation: feedSlide .4s var(--ease-out); }
+  @keyframes feedSlide{ from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:translateX(0); } }
+  .feed-tag{ color:var(--mustard); font-weight:700; }
+  .feed-time{ opacity:0.55; font-size:0.75rem; margin-left:6px; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(24px);
+    background:var(--ink); color:var(--cream); padding:13px 22px; border-radius:6px; font-size:0.92rem;
+    opacity:0; pointer-events:none; transition:all .3s var(--ease-out); z-index:300;
+    box-shadow:0 8px 24px rgba(0,0,0,0.2); max-width:90vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.success{ background:var(--teal); }
+  .toast.error{ background:var(--rust); }
+
+  /* Payment methods */
+  .pay-box{ width:min(360px,92vw); }
+  .pay-box h3{ margin:0 0 4px; }
+  .pay-total{ font-family:'PT Serif',serif; font-size:1.25rem; font-weight:700; margin:4px 0 14px; }
+  .pay-methods{ display:flex; flex-direction:column; gap:8px; }
+  .pay-method{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px; border:1px solid var(--line); border-radius:8px;
+    background:var(--page-bg); color:var(--page-fg); font-weight:600; font-size:0.95rem;
+    text-align:left; width:100%;
+    transition: transform .15s var(--ease-spring), border-color .15s ease, box-shadow .15s ease;
+  }
+  .pay-method:hover{
+    transform:translateY(-2px); border-color:var(--teal);
+    box-shadow:0 6px 16px rgba(0,0,0,0.1);
+  }
+  .pay-method .pay-ico{
+    width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:1.15rem; font-weight:800; flex-shrink:0;
+  }
+  .pay-sbp .pay-ico{ background:#1a1a2e; color:#fff; }
+  .pay-tbank .pay-ico{ background:#ffdd2d; color:#333; }
+  .pay-sber .pay-ico{ background:#21a038; color:#fff; }
+  .pay-card .pay-ico{ background:#3b82f6; color:#fff; }
+  .pay-balance .pay-ico{ background:var(--mustard); color:var(--ink); }
+  .pay-method .pay-sub{ display:block; font-size:0.78rem; font-weight:500; opacity:0.65; margin-top:2px; }
+
+  /* Product detail + reviews */
+  .product-modal{
+    width:min(440px,94vw); max-height:85vh; overflow-y:auto;
+  }
+  .product-modal h3{ margin:0 0 6px; font-size:1.25rem; }
+  .stars-row{ display:flex; gap:4px; margin:8px 0; }
+  .star-btn{
+    background:none; border:none; font-size:1.6rem; color:#ccc; padding:0 2px; line-height:1;
+    transition: transform .15s var(--ease-spring), color .15s ease;
+  }
+  .star-btn:hover, .star-btn.on{ color:var(--mustard); transform:scale(1.15); }
+  .star-btn.on{ color:var(--mustard); }
+  .review-mini{ border-bottom:1px solid var(--line); padding:10px 0; font-size:0.9rem; }
+  .review-mini .rm-head{ display:flex; justify-content:space-between; margin-bottom:4px; }
+  .review-mini .rm-stars{ color:var(--mustard); letter-spacing:1px; }
+  .review-mini.bad .rm-stars{ color:var(--rust); }
+  .card{ cursor:pointer; }
+  .card .buy-row, .card .buy-row *{ cursor:auto; }
+  .card .card-actions{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .card .card-actions button{ background:none; border:1px solid var(--line); border-radius:3px; padding:6px 10px; font-size:0.8rem; font-weight:600; color:var(--page-fg); }
+  .q-item{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .q-item .q-meta{ font-size:0.8rem; opacity:0.65; margin-bottom:4px; }
+  .q-answer{ margin-top:8px; padding:10px; background:rgba(30,75,67,0.08); border-radius:4px; font-size:0.9rem; }
+  body.theme-dark .q-answer{ background:rgba(255,255,255,0.06); }
+
+  .card img{ width:100%; height:150px; object-fit:cover; border-radius:3px; background:var(--line); }
+  .form-box textarea{ resize:vertical; min-height:70px; }
+
+  /* Admin panels */
+  .panel-card{ border:1px solid var(--line); border-radius:6px; padding:16px; margin-bottom:16px; background:var(--page-bg); }
+  .panel-card h3{ margin:0 0 12px; font-size:1.1rem; }
+  .role-badge{ display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; }
+  .role-owner{ background:#6b21a8; color:#fff; }
+  .role-mainadmin{ background:var(--rust); color:#fff; }
+  .role-admin{ background:var(--teal); color:#fff; }
+  .role-user{ background:var(--mustard); color:var(--ink); }
+  .role-custom{ background:#0f766e; color:#fff; }
+  .cat-badge{
+    display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.72rem; font-weight:700;
+    background:rgba(30,75,67,0.12); color:var(--teal); margin-bottom:2px;
+  }
+  body.theme-dark .cat-badge{ background:rgba(255,255,255,0.1); color:#9fd5c8; }
+  .blocked-tag{ color:var(--rust); font-weight:700; font-size:0.8rem; }
+  .log-line{ font-size:0.88rem; }
+  .log-meta{ opacity:0.6; font-size:0.78rem; }
+  .subtabs{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .subtab{ padding:7px 12px; border:1px solid var(--line); border-radius:3px; background:none; font-weight:600; font-size:0.85rem; color:var(--page-fg); }
+  .subtab.active{ background:var(--teal); color:var(--cream); border-color:var(--teal); }
+  .truck-icon{ display:inline-block; animation: truckBounce 1.2s var(--ease-spring) infinite; }
+  @keyframes truckBounce{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
+
+  /* —— Flying orange delivery truck —— */
+  .truck-fly-layer{
+    position:fixed; inset:0; z-index:400; pointer-events:none;
+    overflow:hidden; display:none;
+  }
+  .truck-fly-layer.active{ display:block; }
+  .truck-vehicle{
+    position:absolute; left:-220px; bottom:28%;
+    width:160px; height:70px;
+    animation: truckDrive 1.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  @keyframes truckDrive{
+    0%{ left:-220px; transform:translateY(0) rotate(-2deg); }
+    15%{ transform:translateY(-4px) rotate(1deg); }
+    30%{ transform:translateY(2px) rotate(-1deg); }
+    45%{ transform:translateY(-3px) rotate(0.5deg); }
+    60%{ transform:translateY(1px) rotate(-0.5deg); }
+    80%{ left:70%; transform:translateY(-2px) rotate(1deg); }
+    100%{ left:110%; transform:translateY(0) rotate(0deg); }
+  }
+  .truck-body{
+    position:absolute; left:38px; bottom:18px;
+    width:78px; height:36px;
+    background:linear-gradient(180deg, #ff9a3c 0%, #ff6b00 55%, #e85d00 100%);
+    border-radius:4px 6px 3px 3px;
+    box-shadow:0 4px 0 #c44a00, 0 6px 14px rgba(255,107,0,0.45);
+  }
+  .truck-cabin{
+    position:absolute; left:108px; bottom:18px;
+    width:42px; height:28px;
+    background:linear-gradient(180deg, #ffb35a 0%, #ff7a1a 100%);
+    border-radius:4px 8px 3px 0;
+    box-shadow:0 4px 0 #c44a00;
+  }
+  .truck-cabin::before{
+    content:''; position:absolute; top:5px; left:8px; right:6px; height:12px;
+    background:linear-gradient(180deg, #7dd3fc 0%, #38bdf8 100%);
+    border-radius:2px 4px 1px 1px; opacity:0.9;
+  }
+  .truck-wheel{
+    position:absolute; bottom:4px; width:18px; height:18px;
+    background:radial-gradient(circle at 40% 35%, #555 0%, #222 60%, #111 100%);
+    border-radius:50%; border:2px solid #333;
+    animation: wheelSpin 0.35s linear infinite;
+  }
+  .truck-wheel.w1{ left:52px; }
+  .truck-wheel.w2{ left:118px; }
+  @keyframes wheelSpin{ to{ transform:rotate(360deg); } }
+  .truck-wheel::after{
+    content:''; position:absolute; inset:4px;
+    border:2px solid #888; border-radius:50%;
+  }
+  /* Speed lines (палочки) behind truck */
+  .truck-streaks{
+    position:absolute; right:100%; top:8px; bottom:22px;
+    width:90px; display:flex; flex-direction:column; justify-content:space-around;
+    align-items:flex-end; padding-right:6px;
+  }
+  .truck-streaks span{
+    display:block; height:3px; border-radius:2px;
+    background:linear-gradient(90deg, transparent, #ff9a3c, #ff6b00);
+    box-shadow:0 0 6px rgba(255,107,0,0.7);
+    animation: streakPulse 0.25s ease-in-out infinite alternate;
+  }
+  .truck-streaks span:nth-child(1){ width:55px; animation-delay:0s; opacity:0.95; }
+  .truck-streaks span:nth-child(2){ width:38px; animation-delay:0.05s; opacity:0.75; }
+  .truck-streaks span:nth-child(3){ width:70px; animation-delay:0.1s; opacity:0.9; }
+  .truck-streaks span:nth-child(4){ width:28px; animation-delay:0.08s; opacity:0.65; }
+  .truck-streaks span:nth-child(5){ width:48px; animation-delay:0.12s; opacity:0.85; }
+  @keyframes streakPulse{
+    from{ transform:scaleX(0.7); opacity:0.5; }
+    to{ transform:scaleX(1); opacity:1; }
+  }
+  .truck-dust{
+    position:absolute; left:30px; bottom:2px; width:40px; height:8px;
+    background:radial-gradient(ellipse, rgba(255,140,40,0.5) 0%, transparent 70%);
+    animation: dustPuff 0.4s ease-out infinite;
+  }
+  @keyframes dustPuff{
+    0%{ transform:scale(0.6); opacity:0.6; }
+    100%{ transform:scale(1.4) translateX(-10px); opacity:0; }
+  }
+  .truck-package{
+    position:absolute; left:48px; bottom:40px; width:22px; height:16px;
+    background:#fff3e0; border:2px solid #e85d00; border-radius:2px;
+    box-shadow:inset 0 -3px 0 rgba(232,93,0,0.2);
+    animation: packageBob 0.5s ease-in-out infinite alternate;
+  }
+  .truck-package::after{
+    content:''; position:absolute; left:50%; top:0; bottom:0; width:2px;
+    background:#ff6b00; transform:translateX(-50%);
+  }
+  @keyframes packageBob{ from{ transform:translateY(0); } to{ transform:translateY(-3px); } }
+
+  /* Cookie banner */
+  .cookie-banner{
+    position:fixed; left:16px; right:16px; bottom:16px; z-index:500;
+    max-width:560px; margin:0 auto;
+    background:var(--page-bg); color:var(--page-fg);
+    border:1px solid var(--line); border-radius:10px;
+    padding:16px 18px; box-shadow:0 12px 40px rgba(0,0,0,0.18);
+    display:none; flex-direction:column; gap:12px;
+    animation: popIn .35s var(--ease-spring);
+  }
+  .cookie-banner.show{ display:flex; }
+  .cookie-banner p{ margin:0; font-size:0.9rem; line-height:1.45; }
+  .cookie-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .cookie-actions .btn-accept{ background:var(--teal); color:var(--cream); border:none; border-radius:3px; padding:9px 16px; font-weight:700; font-size:0.88rem; }
+  .cookie-actions .btn-reject{ background:none; border:1px solid var(--line); border-radius:3px; padding:9px 16px; font-weight:600; font-size:0.88rem; color:var(--page-fg); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Всё<span>рынок</span></div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="catalog" onclick="showTab('catalog')">Каталог</button>
+    <button class="tab-btn" data-tab="cart" onclick="showTab('cart')">Корзина (<span id="cartCount">0</span>)</button>
+    <button class="tab-btn" data-tab="publish" onclick="showTab('publish')">Опубликовать</button>
+    <button class="tab-btn staff-only" data-tab="requests" onclick="showTab('requests')" style="display:none;">Заявки (<span id="reqCount">0</span>)</button>
+    <button class="tab-btn staff-only" data-tab="admin" onclick="showTab('admin')" style="display:none;">Панель</button>
+    <button class="tab-btn" data-tab="about" onclick="showTab('about')">О нас</button>
+    <button class="tab-btn" data-tab="reviews" onclick="showTab('reviews')">Отзывы</button>
+    <button class="tab-btn" onclick="openAskQuestion()">Задать вопрос</button>
+    <button class="tab-btn staff-only" data-tab="questions" onclick="showTab('questions')" style="display:none;">Вопросы (<span id="qCount">0</span>)</button>
+    <button class="tab-btn" data-tab="promo" onclick="showTab('promo')">Вступить / повышение</button>
+    <button class="tab-btn owner-only" data-tab="promo-review" onclick="showTab('promo-review')" style="display:none;">Заявки на роли (<span id="promoCount">0</span>)</button>
+    <a class="tab-btn" href="./vsekupete.apk" download style="text-decoration:none;display:inline-flex;align-items:center;">Скачать APK</a>
+    <button class="tab-btn" onclick="toggleTheme()" id="themeBtn" title="Светлая/тёмная тема">🌙</button>
+  </div>
+  <div class="user-box" id="userBox">
+    <button class="btn" onclick="openLogin()">Войти</button>
+  </div>
+</header>
+
+<main>
+
+  <section id="tab-about" class="tab-section">
+    <h2>О нас</h2>
+    <p>Всёрынок — учебная витрина: одна площадка вместо пяти вкладок. Публикуйте товары, покупайте, следите за лентой событий.</p>
+    <p><strong>Почта:</strong> vanayddf@gmail.com</p>
+    <p><strong>Telegram:</strong> @KGB_ARRP</p>
+    <p class="hint" style="margin-top:16px;">Роли: Владелец · Главный админ · Админ · Пользователь. Разные права доступа.</p>
+    <h2 style="margin-top:28px;font-size:1.35rem;">Cookies</h2>
+    <p>Настоящие HTTP-cookies (path=/, SameSite=Lax, Max-Age, Secure на HTTPS):</p>
+    <ul style="opacity:0.9;font-size:0.92rem;">
+      <li><strong>vsyorynok_consent</strong> — согласие (до 1 года)</li>
+      <li><strong>vsyorynok_theme</strong> — тема</li>
+      <li><strong>vsyorynok_uid</strong> — ваш ник в сессии (удобный вход)</li>
+      <li><strong>localStorage</strong> — каталог, балансы, заявки на устройстве</li>
+    </ul>
+    <p class="hint">Рекламу и стороннюю аналитику не подключаем. Очистка — в браузере или кнопкой ниже.</p>
+    <button class="btn-ghost" onclick="resetCookieConsent()">Сбросить согласие на cookies</button>
+  </section>
+
+  <section id="tab-reviews" class="tab-section">
+    <h2>Отзывы</h2>
+    <div class="review-card">
+      <div class="review-head"><span class="review-name">Марина К.</span><span class="review-stars">★★★★★</span></div>
+      <p class="review-text">Заказала плед и кроссовки — всё пришло быстро, качество хорошее. Буду брать ещё.</p>
+    </div>
+    <div class="review-card negative">
+      <div class="review-head"><span class="review-name">Дмитрий С.</span><span class="review-stars">★★☆☆☆</span></div>
+      <p class="review-text">Наушники приехали с браком — один динамик тише другого. Написал в поддержку, ответа пока нет.</p>
+    </div>
+    <div class="review-card">
+      <div class="review-head"><span class="review-name">Алина В.</span><span class="review-stars">★★★★☆</span></div>
+      <p class="review-text">В целом довольна, кофе свежий и вкусный. Минус балл — упаковка помялась при доставке.</p>
+    </div>
+    <div class="review-card negative">
+      <div class="review-head"><span class="review-name">Игорь П.</span><span class="review-stars">★☆☆☆☆</span></div>
+      <p class="review-text">Заказ пришёл не полностью — не хватало кашпо. Пришлось долго выяснять, куда оно делось.</p>
+    </div>
+    <div class="review-card">
+      <div class="review-head"><span class="review-name">Света Р.</span><span class="review-stars">★★★★★</span></div>
+      <p class="review-text">Колонка отличная, звук громкий и чистый, за такую цену — топ.</p>
+    </div>
+    <div class="review-card negative">
+      <div class="review-head"><span class="review-name">Николай Т.</span><span class="review-stars">★★☆☆☆</span></div>
+      <p class="review-text">Курьер привёз на день позже обещанного, предупредили только по факту опоздания.</p>
+    </div>
+  </section>
+
+  <section id="tab-catalog" class="tab-section active">
+    <h2>Каталог</h2>
+    <div class="sort-row">
+      <select id="catSelect" onchange="renderCatalog()">
+        <option value="all">Все категории</option>
+        <option value="Еда">Еда</option>
+        <option value="Мебель">Мебель</option>
+        <option value="Одежда">Одежда</option>
+        <option value="Обувь">Обувь</option>
+        <option value="Электроника">Электроника</option>
+        <option value="Для дома">Для дома</option>
+        <option value="Красота">Красота</option>
+        <option value="Спорт">Спорт</option>
+        <option value="Другое">Другое</option>
+      </select>
+      <select id="sortSelect" onchange="renderCatalog()">
+        <option value="default">По умолчанию</option>
+        <option value="price-asc">Цена: сначала дешёвые</option>
+        <option value="price-desc">Цена: сначала дорогие</option>
+        <option value="name-asc">Название: А-Я</option>
+      </select>
+    </div>
+    <div class="grid" id="catalogGrid"></div>
+  </section>
+
+  <section id="tab-cart" class="tab-section">
+    <h2>Корзина</h2>
+    <div id="cartList"><p class="empty">Пока пусто.</p></div>
+    <div class="cart-total-row"><span>Итого</span><strong id="cartTotal">0 ₽</strong></div>
+    <button class="btn" style="margin-top:16px;" onclick="checkout()">Оплатить</button>
+  </section>
+
+  <section id="tab-publish" class="tab-section">
+    <h2>Опубликовать товар</h2>
+    <div class="form-box">
+      <input id="pubName" placeholder="Название товара">
+      <textarea id="pubDesc" placeholder="Описание товара"></textarea>
+      <select id="pubCategory">
+        <option value="Еда">Еда</option>
+        <option value="Мебель">Мебель</option>
+        <option value="Одежда">Одежда</option>
+        <option value="Обувь">Обувь</option>
+        <option value="Электроника">Электроника</option>
+        <option value="Для дома">Для дома</option>
+        <option value="Красота">Красота</option>
+        <option value="Спорт">Спорт</option>
+        <option value="Другое" selected>Другое</option>
+      </select>
+      <input id="pubPrice" type="number" min="1" placeholder="Цена, ₽">
+      <input id="pubStock" type="number" min="1000" max="99999" placeholder="Сколько штук на складе (1000–99999)">
+      <input id="pubImage" type="file" accept="image/*">
+      <button class="btn" onclick="publishItem()">Отправить</button>
+      <p class="hint">Админы публикуют сразу. Обычный пользователь — заявка на модерацию. На складе: 1000–99999 шт. После продажи продавец получает <strong>70%</strong>, площадка — <strong>30%</strong>.</p>
+    </div>
+  </section>
+
+  <section id="tab-requests" class="tab-section">
+    <h2>Заявки на публикацию</h2>
+    <div id="requestsList"><p class="empty">Заявок нет.</p></div>
+  </section>
+
+  <section id="tab-admin" class="tab-section">
+    <h2>Панель управления</h2>
+    <div class="subtabs" id="adminSubtabs">
+      <button class="subtab active" data-sub="users" onclick="showAdminSub('users')">Пользователи</button>
+      <button class="subtab" data-sub="rights" onclick="showAdminSub('rights')">Права</button>
+      <button class="subtab" data-sub="log" onclick="showAdminSub('log')">Журнал</button>
+      <button class="subtab" data-sub="products" onclick="showAdminSub('products')">Товары</button>
+    </div>
+    <div id="admin-sub-users" class="admin-sub">
+      <div class="panel-card">
+        <h3>Пользователи и блокировки</h3>
+        <div id="usersList"><p class="empty">Нет зарегистрированных пользователей.</p></div>
+      </div>
+    </div>
+    <div id="admin-sub-rights" class="admin-sub" style="display:none;">
+      <div class="panel-card">
+        <h3>Управление администраторами и званиями</h3>
+        <p class="hint" id="rightsHint">Только владелец может назначать роли и создавать звания.</p>
+        <div id="adminsList"></div>
+        <div class="form-box" style="margin-top:16px; max-width:400px;" id="addAdminForm">
+          <input id="newAdminNick" placeholder="Никнейм пользователя">
+          <select id="newAdminRole"></select>
+          <button class="btn" onclick="addStaff()">Назначить звание</button>
+        </div>
+      </div>
+      <div class="panel-card" id="ranksPanel" style="margin-top:12px;">
+        <h3>Новые звания</h3>
+        <p class="hint">Владелец и со-владелец могут создавать звания и настраивать права.</p>
+        <div id="ranksList"></div>
+        <div class="form-box" style="margin-top:14px; max-width:420px;" id="createRankForm">
+          <input id="rankName" placeholder="Название звания (например: Модератор)">
+          <input id="rankColor" type="color" value="#1e4b43" title="Цвет бейджа" style="height:40px;padding:4px;">
+          <label style="font-size:0.85rem;"><input type="checkbox" id="rk_products" checked> Товары (правка)</label>
+          <label style="font-size:0.85rem;"><input type="checkbox" id="rk_delete"> Удаление товаров</label>
+          <label style="font-size:0.85rem;"><input type="checkbox" id="rk_requests" checked> Заявки</label>
+          <label style="font-size:0.85rem;"><input type="checkbox" id="rk_users"> Пользователи / блокировки</label>
+          <label style="font-size:0.85rem;"><input type="checkbox" id="rk_questions" checked> Вопросы</label>
+          <label style="font-size:0.85rem;"><input type="checkbox" id="rk_admins"> Управление админами</label>
+          <button class="btn" onclick="createRank()">Создать звание</button>
+        </div>
+      </div>
+    </div>
+    <div id="admin-sub-log" class="admin-sub" style="display:none;">
+      <div class="panel-card">
+        <h3>Журнал действий админов</h3>
+        <div id="adminLogList"><p class="empty">Записей пока нет.</p></div>
+      </div>
+    </div>
+    <div id="admin-sub-products" class="admin-sub" style="display:none;">
+      <div class="panel-card">
+        <h3>Быстрое управление товарами</h3>
+        <p class="hint" id="platformBalanceHint">Комиссия площадки (30%): 0 ₽</p>
+        <div id="adminProductsList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-questions" class="tab-section">
+    <h2>Вопросы пользователей</h2>
+    <div id="questionsList"><p class="empty">Вопросов нет.</p></div>
+  </section>
+
+  <section id="tab-promo" class="tab-section">
+    <h2>Вступить в звание / повышение</h2>
+    <p class="hint">Пользователь может попросить место в администрации. Мл. админ, модератор и другие сотрудники — повышение. К званиям, которые создали владельцы, можно присоединиться. Заявки видят только владелец и со-владелец.</p>
+    <div class="form-box" style="max-width:420px;">
+      <select id="promoTarget"></select>
+      <textarea id="promoReason" placeholder="Почему вас стоит назначить…"></textarea>
+      <button class="btn" onclick="submitPromoRequest()">Отправить заявку</button>
+    </div>
+    <h3 class="serif" style="margin-top:24px;font-size:1.1rem;">Мои заявки</h3>
+    <div id="myPromoList"><p class="empty">Пока нет заявок.</p></div>
+  </section>
+
+  <section id="tab-promo-review" class="tab-section">
+    <h2>Заявки на роли (только владельцы)</h2>
+    <div id="promoReviewList"><p class="empty">Заявок нет.</p></div>
+  </section>
+
+</main>
+
+<div class="overlay hidden" id="loginOverlay">
+  <div class="login-box">
+    <h3 class="serif" style="margin:0 0 4px;">Вход</h3>
+    <input id="loginNick" placeholder="Никнейм">
+    <input id="loginPass" type="password" placeholder="Пароль">
+    <p class="hint" style="margin:0;">Вход по нику и паролю</p>
+    <button class="btn" onclick="login()">Войти</button>
+    <button class="btn-ghost" onclick="closeLogin()">Отмена</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="confirmOverlay">
+  <div class="login-box">
+    <p id="confirmText" style="margin:0;"></p>
+    <button class="btn" onclick="confirmYes()">Да</button>
+    <button class="btn-ghost" onclick="confirmNo()">Отмена</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="payOverlay">
+  <div class="login-box pay-box">
+    <h3 class="serif">Оплата заказа</h3>
+    <div class="pay-total" id="payTotalLabel">0 ₽</div>
+    <p class="hint" style="margin:0 0 8px;">Выберите способ оплаты</p>
+    <div class="pay-methods">
+      <button class="pay-method pay-sbp" onclick="completePayment('СБП')">
+        <span class="pay-ico">СБП</span>
+        <span>СБП<span class="pay-sub">Система быстрых платежей</span></span>
+      </button>
+      <button class="pay-method pay-tbank" onclick="completePayment('Т-Банк')">
+        <span class="pay-ico">T</span>
+        <span>Т-Банк<span class="pay-sub">T-Pay / карта Т-Банка</span></span>
+      </button>
+      <button class="pay-method pay-sber" onclick="completePayment('Сбербанк')">
+        <span class="pay-ico">С</span>
+        <span>Сбербанк<span class="pay-sub">SberPay / карта</span></span>
+      </button>
+      <button class="pay-method pay-card" onclick="completePayment('Карта')">
+        <span class="pay-ico">💳</span>
+        <span>Банковская карта<span class="pay-sub">Visa, Mastercard, МИР</span></span>
+      </button>
+      <button class="pay-method pay-balance" onclick="completePayment('Баланс')">
+        <span class="pay-ico">₽</span>
+        <span>Баланс аккаунта<span class="pay-sub">Списать с внутреннего баланса</span></span>
+      </button>
+    </div>
+    <button class="btn-ghost" style="margin-top:8px;" onclick="closePay()">Отмена</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="productOverlay">
+  <div class="login-box product-modal">
+    <div id="productModalBody"></div>
+    <button class="btn-ghost" style="margin-top:12px;" onclick="closeProduct()">Закрыть</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="askOverlay">
+  <div class="login-box" style="width:min(360px,92vw);">
+    <h3 class="serif" style="margin:0 0 8px;">Задать вопрос админам</h3>
+    <textarea id="askText" placeholder="Ваш вопрос…" style="padding:11px 14px;border:1px solid var(--line);border-radius:3px;background:var(--page-bg);color:var(--page-fg);min-height:90px;resize:vertical;"></textarea>
+    <button class="btn" onclick="submitQuestion()">Отправить</button>
+    <button class="btn-ghost" onclick="closeAsk()">Отмена</button>
+  </div>
+</div>
+
+
+
+<div class="toast" id="toast"></div>
+
+<div class="truck-fly-layer" id="truckFly" aria-hidden="true">
+  <div class="truck-vehicle" id="truckVehicle">
+    <div class="truck-streaks">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="truck-body"></div>
+    <div class="truck-package"></div>
+    <div class="truck-cabin"></div>
+    <div class="truck-wheel w1"></div>
+    <div class="truck-wheel w2"></div>
+    <div class="truck-dust"></div>
+  </div>
+</div>
+
+<script>
+  window.onerror = function(msg, url, line, col, err){
+    var box = document.createElement('div');
+    box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b8492f;color:#fff;padding:14px;font-family:monospace;font-size:13px;z-index:99999;white-space:pre-wrap;';
+    box.textContent = 'ОШИБКА СКРИПТА: ' + msg + ' (строка ' + line + ', столбец ' + col + ')';
+    document.body.prepend(box);
+    return false;
+  };
+</script>
+<script>
+  const STORAGE_KEY = 'vsyorynok_shared_state_v3';
+  const CATEGORIES = ['Еда','Мебель','Одежда','Обувь','Электроника','Для дома','Красота','Спорт','Другое'];
+  const DEFAULT_CAT_BY_ID = {
+    1:'Одежда', 2:'Электроника', 3:'Еда', 4:'Для дома', 5:'Обувь', 6:'Электроника',
+    7:'Еда', 8:'Мебель', 9:'Одежда', 10:'Электроника', 11:'Еда', 12:'Для дома',
+    13:'Одежда', 14:'Электроника', 15:'Еда', 16:'Для дома', 17:'Одежда', 18:'Электроника',
+    19:'Для дома', 20:'Для дома'
+  };
+  let currentUser = null;
+  let cart = [];
+
+  // Fixed accounts (nick lowercase for match)
+  // ВЛАДЕЛЕЦ 676767 | Со ВЛАДЕЛЕЦ 6970 | Глав админ 666 | Админ 3219 | мл адм 4567
+  const FIXED_ACCOUNTS = {
+    'владелец':     { pass: '676767', role: 'owner',     balance: Infinity },
+    'со владелец':  { pass: '6970',   role: 'owner',     balance: Infinity },
+    'глав админ':   { pass: '666',    role: 'mainadmin', balance: 5000000 },
+    'админ':        { pass: '3219',   role: 'admin',     balance: 1000000 },
+    'мл адм':       { pass: '4567',   role: 'admin',     balance: 500000 }
+  };
+
+  // Safe storage (file:// and sandboxed pages often block localStorage)
+  const memoryStore = {};
+  function storageGet(key){
+    try{ return localStorage.getItem(key); }catch(e){ return memoryStore[key] != null ? memoryStore[key] : null; }
+  }
+  function storageSet(key, val){
+    try{ localStorage.setItem(key, val); }catch(e){ memoryStore[key] = val; }
+  }
+  function storageAvailable(){
+    try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true; }catch(e){ return false; }
+  }
+
+  function defaultState(){
+    return {
+      nextId: 21,
+      nextReqId: 1,
+      products: [
+        {id:1, name:'Куртка на межсезонье', price:4990, stock:1200, description:'Плотная ткань, три цвета', image:'', reviews:[{name:'Марина К.',rating:5,text:'Тёплая и не продувает, взяла бы ещё цвет.'},{name:'Олег Н.',rating:2,text:'Размер маломерит, пришлось возвращать.'}]},
+        {id:2, name:'Беспроводные наушники', price:3450, stock:3500, description:'До 30 часов работы', image:'', reviews:[{name:'Дмитрий С.',rating:2,text:'Один динамик тише другого, похоже на брак.'},{name:'Алина В.',rating:5,text:'Звук чистый, держат заряд реально долго.'}]},
+        {id:3, name:'Кофе в зёрнах, 1 кг', price:990, stock:5000, description:'Обжарка средняя', image:'', reviews:[{name:'Света Р.',rating:5,text:'Свежий, ароматный, беру не первый раз.'}]},
+        {id:4, name:'Плед крупной вязки', price:2190, stock:1800, description:'150×200 см, хлопок', image:'', reviews:[{name:'Игорь П.',rating:1,text:'Пришёл с зацепками, будто б/у.'},{name:'Катя Л.',rating:4,text:'Мягкий и плотный, но чуть меньше по размеру, чем ждала.'}]},
+        {id:5, name:'Кроссовки повседневные', price:5600, stock:2500, description:'Лёгкая подошва', image:'', reviews:[{name:'Николай Т.',rating:2,text:'Курьер привёз на день позже обещанного.'},{name:'Аня Ф.',rating:5,text:'Очень удобные, ношу каждый день уже месяц.'}]},
+        {id:6, name:'Портативная колонка', price:2890, stock:4000, description:'Влагозащита IPX6', image:'', reviews:[{name:'Максим Б.',rating:5,text:'Громкая и басы хорошие за такую цену.'}]},
+        {id:7, name:'Мёд разнотравье, 500 г', price:640, stock:6000, description:'Фермерское хозяйство', image:'', reviews:[{name:'Люда В.',rating:4,text:'Вкусный, но баночка пришла помятая.'}]},
+        {id:8, name:'Керамическое кашпо', price:1150, stock:2000, description:'Диаметр 18 см', image:'', reviews:[{name:'Игорь П.',rating:1,text:'Заказ пришёл не полностью — не хватало этого кашпо.'}]},
+        {id:9, name:'Джинсы прямого кроя', price:3990, stock:2200, description:'Плотный деним, тёмно-синий', image:'', reviews:[{name:'Вика С.',rating:5,text:'Сидят отлично, ткань плотная, не тянутся.'}]},
+        {id:10, name:'Смарт-часы', price:7490, stock:1500, description:'Мониторинг сна и пульса', image:'', reviews:[{name:'Артём К.',rating:2,text:'Пульс иногда врёт на 10-15 ударов.'},{name:'Оля М.',rating:4,text:'В целом хорошие часы, батарея держит 4 дня.'}]},
+        {id:11, name:'Чай улун, 250 г', price:520, stock:7000, description:'Листовой, среднелистовой', image:'', reviews:[{name:'Павел Р.',rating:5,text:'Настоящий листовой чай, не пыль.'}]},
+        {id:12, name:'Настольная лампа', price:1890, stock:2600, description:'Регулировка яркости', image:'', reviews:[{name:'Настя Д.',rating:3,text:'Светит нормально, но провод короткий.'}]},
+        {id:13, name:'Рюкзак городской', price:3290, stock:1900, description:'Отделение под ноутбук 15"', image:'', reviews:[{name:'Женя Л.',rating:1,text:'Молния сломалась через неделю использования.'},{name:'Иван К.',rating:5,text:'Вместительный и удобные лямки, ношу с ноутбуком без проблем.'}]},
+        {id:14, name:'Powerbank 20000 мАч', price:2490, stock:3100, description:'Быстрая зарядка', image:'', reviews:[{name:'Тимур А.',rating:5,text:'Заряжает быстро, телефон держит весь день.'}]},
+        {id:15, name:'Оливковое масло, 1 л', price:780, stock:4800, description:'Первый отжим', image:'', reviews:[{name:'Марина К.',rating:4,text:'Вкус хороший, но дороговато для такого объёма.'}]},
+        {id:16, name:'Набор кухонных ножей', price:2990, stock:1700, description:'Нержавеющая сталь, 5 предметов', image:'', reviews:[{name:'Сергей В.',rating:2,text:'Один нож пришёл с зазубриной на лезвии.'}]},
+        {id:17, name:'Толстовка оверсайз', price:2790, stock:2400, description:'Хлопок, унисекс', image:'', reviews:[{name:'Лиза Н.',rating:5,text:'Очень мягкая, размер как на фото.'}]},
+        {id:18, name:'Беспроводная мышь', price:1290, stock:3900, description:'Бесшумные клавиши', image:'', reviews:[{name:'Костя Ш.',rating:3,text:'Работает, но иногда лагает курсор.'}]},
+        {id:19, name:'Свеча ароматическая', price:690, stock:5200, description:'Аромат сандала', image:'', reviews:[{name:'Даша О.',rating:5,text:'Пахнет ровно и не приторно, горит долго.'}]},
+        {id:20, name:'Термокружка 500 мл', price:990, stock:4100, description:'Держит тепло 8 часов', image:'', reviews:[{name:'Николай Т.',rating:2,text:'Крышка подтекает, если наклонить.'}]},
+      ],
+      pendingRequests: [],
+      questions: [],
+      nextQId: 1,
+      feed: [],
+      users: {},
+      staff: {},
+      ranks: {}, // id -> { name, color, perms }
+      promoRequests: [], // {id, nick, key, type, targetRole, targetName, message, time}
+      nextPromoId: 1,
+      adminLog: []
+    };
+  }
+
+  let state = loadState();
+
+  function normalizeState(s){
+    s.nextId = s.nextId || 21;
+    s.nextReqId = s.nextReqId || 1;
+    s.nextQId = s.nextQId || 1;
+    s.feed = s.feed || [];
+    s.questions = s.questions || [];
+    s.users = s.users || {};
+    s.staff = s.staff || {};
+    s.ranks = s.ranks || {};
+    s.promoRequests = Array.isArray(s.promoRequests) ? s.promoRequests : [];
+    s.nextPromoId = s.nextPromoId || 1;
+    s.adminLog = s.adminLog || [];
+    s.platformBalance = typeof s.platformBalance === 'number' ? s.platformBalance : 0;
+    s.products = (s.products || []).map(p => {
+      let cat = p.category || DEFAULT_CAT_BY_ID[p.id] || 'Другое';
+      if(CATEGORIES.indexOf(cat) < 0) cat = 'Другое';
+      return {
+        id: p.id,
+        name: p.name || 'Без названия',
+        price: (typeof p.price === 'number' && !isNaN(p.price)) ? p.price : 0,
+        stock: (typeof p.stock === 'number' && !isNaN(p.stock)) ? p.stock : 0,
+        description: p.description || '',
+        image: p.image || '',
+        reviews: Array.isArray(p.reviews) ? p.reviews : [],
+        seller: p.seller || '',
+        sellerKey: (p.sellerKey || (p.seller ? String(p.seller).toLowerCase() : '') || ''),
+        category: cat
+      };
+    });
+    s.pendingRequests = (s.pendingRequests || []).map(r => ({
+      id: r.id,
+      nick: r.nick || 'Гость',
+      name: r.name || 'Без названия',
+      price: (typeof r.price === 'number' && !isNaN(r.price)) ? r.price : 0,
+      stock: (typeof r.stock === 'number' && !isNaN(r.stock)) ? r.stock : 1000,
+      description: r.description || '',
+      image: r.image || '',
+      reviews: Array.isArray(r.reviews) ? r.reviews : [],
+      seller: r.seller || r.nick || 'Гость',
+      sellerKey: (r.sellerKey || String(r.nick || '').toLowerCase()),
+      category: (r.category && CATEGORIES.indexOf(r.category) >= 0) ? r.category : 'Другое'
+    }));
+    return s;
+  }
+
+  function loadState(){
+    try{
+      const raw = storageGet(STORAGE_KEY);
+      if(raw) return normalizeState(JSON.parse(raw));
+    }catch(e){}
+    const s = defaultState();
+    try{ storageSet(STORAGE_KEY, JSON.stringify(s)); }catch(e){}
+    return s;
+  }
+
+  let _bc = null;
+  try{ _bc = new BroadcastChannel('vsyorynok_sync_v3'); }catch(e){ _bc = null; }
+
+  function syncCurrentUserFromState(){
+    if(!currentUser || !currentUser.key) return;
+    const u = state.users[currentUser.key];
+    if(!u) return;
+    let changed = false;
+    if(u.balance !== undefined && u.balance !== currentUser.balance){
+      currentUser.balance = u.balance;
+      changed = true;
+    }
+    const role = state.staff[currentUser.key] || u.role || currentUser.role;
+    if(role && role !== currentUser.role){
+      currentUser.role = role;
+      changed = true;
+      updateStaffVisibility();
+    }
+    if(changed) renderUserBox();
+  }
+
+  function applyRemoteState(raw){
+    try{
+      state = normalizeState(JSON.parse(raw));
+      syncCurrentUserFromState();
+      renderCatalog();
+      renderRequests();
+      renderQuestions();
+      renderPromoUI();
+      if(currentUser && isStaff()) renderAdminPanel();
+      if(currentUser) renderUserBox();
+    }catch(err){}
+  }
+
+  function saveState(){
+    try{
+      const raw = JSON.stringify(state);
+      storageSet(STORAGE_KEY, raw);
+      if(_bc){ try{ _bc.postMessage({ type:'state', raw }); }catch(e){} }
+    }catch(e){}
+  }
+
+  try{
+    window.addEventListener('storage', (e) => {
+      if(e.key !== STORAGE_KEY || !e.newValue) return;
+      applyRemoteState(e.newValue);
+    });
+  }catch(e){}
+
+  if(_bc){
+    try{
+      _bc.onmessage = (ev) => {
+        if(ev.data && ev.data.type === 'state' && ev.data.raw){
+          applyRemoteState(ev.data.raw);
+        }
+      };
+    }catch(e){}
+  }
+
+  function showToast(msg, type){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(()=> t.classList.remove('show'), 2800);
+  }
+
+  function playTruckAnim(){
+    const layer = document.getElementById('truckFly');
+    const vehicle = document.getElementById('truckVehicle');
+    if(!layer || !vehicle) return;
+    layer.classList.remove('active');
+    vehicle.style.animation = 'none';
+    void vehicle.offsetWidth; // reflow
+    vehicle.style.animation = '';
+    layer.classList.add('active');
+    clearTimeout(window._truckTimer);
+    window._truckTimer = setTimeout(() => {
+      layer.classList.remove('active');
+    }, 1700);
+  }
+
+  function nowTime(){
+    const d = new Date();
+    return d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+
+  function logEvent(tag, text){
+    // лента убрана — события только в журнале админов при необходимости
+  }
+
+  function logAdmin(action){
+    if(!currentUser) return;
+    state.adminLog.unshift({time: nowTime(), nick: currentUser.nick, action});
+    if(state.adminLog.length > 150) state.adminLog.length = 150;
+    saveState();
+    if(document.getElementById('admin-sub-log') && document.getElementById('admin-sub-log').style.display !== 'none'){
+      renderAdminLog();
+    }
+  }
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function isOwner(){
+    return currentUser && currentUser.role === 'owner';
+  }
+
+  function openLogin(){
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    const uid = getCookie('vsyorynok_uid');
+    const nickInput = document.getElementById('loginNick');
+    if(uid && nickInput && !nickInput.value) nickInput.value = uid;
+  }
+  function closeLogin(){ document.getElementById('loginOverlay').classList.add('hidden'); }
+
+  function roleLabel(role){
+    if(role === 'owner') return 'Владелец';
+    if(role === 'mainadmin') return 'Главный админ';
+    if(role === 'admin') return 'Админ';
+    if(role === 'user') return 'Пользователь';
+    if(state.ranks && state.ranks[role]) return state.ranks[role].name;
+    return role || 'Пользователь';
+  }
+
+  function roleClass(role){
+    if(role === 'owner') return 'role-owner';
+    if(role === 'mainadmin') return 'role-mainadmin';
+    if(role === 'admin') return 'role-admin';
+    if(state.ranks && state.ranks[role]) return 'role-custom';
+    return 'role-user';
+  }
+
+  function getPerms(role){
+    if(role === 'owner'){
+      return { products:true, deleteProducts:true, requests:true, users:true, questions:true, admins:true, staff:true };
+    }
+    if(role === 'mainadmin'){
+      return { products:true, deleteProducts:true, requests:true, users:true, questions:true, admins:false, staff:true };
+    }
+    if(role === 'admin'){
+      return { products:true, deleteProducts:false, requests:true, users:false, questions:true, admins:false, staff:true };
+    }
+    if(state.ranks && state.ranks[role] && state.ranks[role].perms){
+      const p = state.ranks[role].perms;
+      return {
+        products: !!p.products,
+        deleteProducts: !!p.deleteProducts,
+        requests: !!p.requests,
+        users: !!p.users,
+        questions: !!p.questions,
+        admins: !!p.admins,
+        staff: !!(p.products || p.requests || p.users || p.questions || p.admins || p.deleteProducts)
+      };
+    }
+    return { products:false, deleteProducts:false, requests:false, users:false, questions:false, admins:false, staff:false };
+  }
+
+  function myPerms(){
+    return currentUser ? getPerms(currentUser.role) : getPerms('user');
+  }
+
+  function isStaff(){
+    return currentUser && myPerms().staff;
+  }
+
+  function canManageProducts(){
+    return currentUser && myPerms().products;
+  }
+
+  function canDeleteProducts(){
+    return currentUser && myPerms().deleteProducts;
+  }
+
+  function canManageUsers(){
+    return currentUser && myPerms().users;
+  }
+
+  function canManageAdmins(){
+    return currentUser && (currentUser.role === 'owner' || myPerms().admins);
+  }
+
+  function canModerateRequests(){
+    return currentUser && myPerms().requests;
+  }
+
+  function canAnswerQuestions(){
+    return currentUser && myPerms().questions;
+  }
+
+  function login(){
+    const nickRaw = document.getElementById('loginNick').value.trim() || 'Гость';
+    const nick = nickRaw.toLowerCase();
+    const pass = document.getElementById('loginPass').value;
+
+    // Check blocked
+    if(state.users[nick] && state.users[nick].blocked){
+      showToast('Аккаунт заблокирован', 'error');
+      return;
+    }
+
+    let role = 'user';
+    let balance = 1000;
+
+    const fixed = FIXED_ACCOUNTS[nick];
+    if(fixed){
+      if(fixed.pass !== pass){
+        showToast('Неверный пароль', 'error');
+        return;
+      }
+      role = fixed.role;
+      balance = fixed.balance;
+    } else if(state.users[nick] && state.users[nick].pass && state.users[nick].pass === pass){
+      if(state.users[nick].blocked){ showToast('Аккаунт заблокирован', 'error'); return; }
+      role = state.staff[nick] || state.users[nick].role || 'user';
+      balance = state.users[nick].balance != null ? state.users[nick].balance : (getPerms(role).staff ? 1000000 : 1000);
+    } else if(state.staff[nick] && state.users[nick] && (!state.users[nick].pass || state.users[nick].pass === pass)){
+      role = state.staff[nick];
+      balance = state.users[nick].balance != null ? state.users[nick].balance : 1000000;
+      state.users[nick].pass = pass || state.users[nick].pass || '';
+      state.users[nick].role = role;
+      saveState();
+    } else {
+      if(state.users[nick] && state.users[nick].pass && state.users[nick].pass !== pass){
+        showToast('Неверный пароль', 'error');
+        return;
+      }
+      if(!state.users[nick]){
+        state.users[nick] = { role: 'user', balance: 1000, blocked: false, pass: pass || '', registeredAt: Date.now() };
+      } else if(!state.users[nick].pass){
+        state.users[nick].pass = pass || '';
+      }
+      if(state.staff[nick]){
+        role = state.staff[nick];
+        state.users[nick].role = role;
+        balance = state.users[nick].balance != null ? state.users[nick].balance : 1000000;
+      } else {
+        role = 'user';
+        balance = state.users[nick].balance != null ? state.users[nick].balance : 1000;
+      }
+      saveState();
+    }
+
+    // Sync fixed accounts into users
+    if(fixed){
+      state.users[nick] = state.users[nick] || {};
+      state.users[nick].role = role;
+      state.users[nick].balance = balance === Infinity ? Infinity : balance;
+      state.users[nick].blocked = false;
+      state.users[nick].pass = pass;
+      saveState();
+    }
+
+    currentUser = { nick: nickRaw, role, balance, key: nick };
+    closeLogin();
+    document.getElementById('loginNick').value = '';
+    document.getElementById('loginPass').value = '';
+    if(getCookie('vsyorynok_consent') === '1') setCookie('vsyorynok_uid', nickRaw, 30);
+    renderUserBox();
+    updateStaffVisibility();
+    logEvent('Система', `${nickRaw} вошёл как ${roleLabel(role)}`);
+    if(isStaff()) logAdmin(`вход в систему (${roleLabel(role)})`);
+    renderRequests();
+    renderCatalog();
+    renderQuestions();
+    renderPromoUI();
+    if(isStaff()) renderAdminPanel();
+    showToast('Добро пожаловать, ' + nickRaw, 'success');
+  }
+
+  function logout(){
+    if(currentUser){
+      logEvent('Система', `${currentUser.nick} вышел из системы`);
+      if(isStaff()) logAdmin('выход из системы');
+    }
+    currentUser = null;
+    renderUserBox();
+    updateStaffVisibility();
+    showTab('catalog');
+    renderCatalog();
+  }
+
+  function updateStaffVisibility(){
+    document.querySelectorAll('.staff-only').forEach(el => {
+      el.style.display = isStaff() ? '' : 'none';
+    });
+    document.querySelectorAll('.owner-only').forEach(el => {
+      el.style.display = isOwner() ? '' : 'none';
+    });
+  }
+
+  function renderUserBox(){
+    const box = document.getElementById('userBox');
+    if(!currentUser){
+      box.innerHTML = `<button class="btn" onclick="openLogin()">Войти</button>`;
+      return;
+    }
+    const label = roleLabel(currentUser.role);
+    const balanceText = currentUser.balance === Infinity ? '∞' : Number(currentUser.balance).toLocaleString('ru-RU') + ' ₽';
+    box.innerHTML = `
+      <span class="badge ${roleClass(currentUser.role)}">${label}</span>
+      <span>${esc(currentUser.nick)}</span>
+      <span class="hint" style="margin:0;">Баланс: ${balanceText}</span>
+      <button class="btn-ghost" onclick="logout()">Выйти</button>
+    `;
+  }
+
+  function requireLogin(){
+    if(!currentUser){
+      showToast('Сначала войдите в аккаунт', 'error');
+      openLogin();
+      return false;
+    }
+    if(state.users[currentUser.key] && state.users[currentUser.key].blocked){
+      showToast('Аккаунт заблокирован', 'error');
+      logout();
+      return false;
+    }
+    return true;
+  }
+
+  function showTab(name){
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    const sec = document.getElementById('tab-' + name);
+    if(sec) sec.classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    if(name === 'admin' && isStaff()) renderAdminPanel();
+    if(name === 'questions' && isStaff()) renderQuestions();
+    if(name === 'promo') renderPromoUI();
+    if(name === 'promo-review' && isOwner()) renderPromoReview();
+  }
+
+  function showAdminSub(name){
+    document.querySelectorAll('.admin-sub').forEach(s => s.style.display = 'none');
+    const el = document.getElementById('admin-sub-' + name);
+    if(el) el.style.display = 'block';
+    document.querySelectorAll('.subtab').forEach(b => b.classList.toggle('active', b.dataset.sub === name));
+    if(name === 'users') renderUsersList();
+    if(name === 'rights') renderRightsPanel();
+    if(name === 'log') renderAdminLog();
+    if(name === 'products') renderAdminProducts();
+  }
+
+  function getSortedProducts(){
+    const sortSelect = document.getElementById('sortSelect');
+    const catSelect = document.getElementById('catSelect');
+    const mode = sortSelect ? sortSelect.value : 'default';
+    const cat = catSelect ? catSelect.value : 'all';
+    let list = state.products.slice();
+    if(cat && cat !== 'all') list = list.filter(p => (p.category || 'Другое') === cat);
+    if(mode === 'price-asc') list.sort((a,b)=> a.price - b.price);
+    else if(mode === 'price-desc') list.sort((a,b)=> b.price - a.price);
+    else if(mode === 'name-asc') list.sort((a,b)=> a.name.localeCompare(b.name, 'ru'));
+    return list;
+  }
+
+  function toggleTheme(){
+    const isDark = document.body.classList.toggle('theme-dark');
+    const btn = document.getElementById('themeBtn');
+    btn.style.transition = 'transform .4s var(--ease-spring)';
+    btn.style.transform = 'rotate(360deg)';
+    setTimeout(()=>{ btn.style.transform = 'rotate(0deg)'; }, 400);
+    btn.textContent = isDark ? '☀' : '🌙';
+    storageSet('vsyorynok_theme', isDark ? 'dark' : 'light');
+    setCookie('vsyorynok_theme', isDark ? 'dark' : 'light', 365);
+  }
+
+  function renderCatalog(forceAnim){
+    const grid = document.getElementById('catalogGrid');
+    if(state.products.length === 0){
+      grid.innerHTML = '<p class="empty">Товаров пока нет.</p>';
+      return;
+    }
+    const canEdit = canManageProducts();
+    const canDel = canDeleteProducts();
+    const sorted = getSortedProducts();
+    if(forceAnim){
+      grid.innerHTML = '';
+      void grid.offsetWidth;
+      playTruckAnim();
+    }
+    if(sorted.length === 0){
+      grid.innerHTML = '<p class="empty">В этой категории пока нет товаров.</p>';
+      return;
+    }
+    grid.innerHTML = sorted.map(p => {
+      const isOwn = currentUser && p.sellerKey && p.sellerKey === currentUser.key;
+      const canBuy = p.stock >= 1000 && !isOwn;
+      const buyMax = Math.min(99999, p.stock);
+      const revCount = (p.reviews && p.reviews.length) || 0;
+      const cat = p.category || 'Другое';
+      return `
+      <div class="card" onclick="openProduct(${p.id})">
+        ${p.image ? `<img src="${p.image}" alt="${esc(p.name)}">` : ''}
+        <span class="cat-badge">${esc(cat)}</span>
+        <h3>${esc(p.name)}</h3>
+        ${p.description ? `<p style="font-size:0.85rem;opacity:0.75;margin:0;">${esc(p.description)}</p>` : ''}
+        <div class="price">${p.price.toLocaleString('ru-RU')} ₽</div>
+        <p class="hint" style="margin:0;">В наличии: ${p.stock.toLocaleString('ru-RU')} шт. · отзывов: ${revCount}${p.seller ? ` · продавец: ${esc(p.seller)}` : ''}</p>
+        ${isOwn ? `<p class="hint" style="margin:0;color:var(--rust);">Это ваш товар — купить нельзя</p>` : (canBuy ? `
+        <div class="buy-row" onclick="event.stopPropagation()">
+          <input type="number" min="1000" max="${buyMax}" value="1000" id="qty-${p.id}">
+          <button onclick="addToCart(${p.id})">Купить</button>
+        </div>` : `<p class="hint" style="margin:0;color:var(--rust);">Меньше 1000 шт. — покупка недоступна</p>`)}
+        <div class="card-actions" onclick="event.stopPropagation()">
+          <button onclick="openProduct(${p.id}, 'reviews')">Прочитать отзывы</button>
+          <button onclick="openProduct(${p.id}, 'add')">Добавить отзыв</button>
+        </div>
+        ${canEdit ? `
+        <div class="buy-row" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px;" onclick="event.stopPropagation()">
+          <input type="number" min="1" value="${p.price}" id="editPrice-${p.id}" title="Цена">
+          <input type="number" min="0" max="99999" value="${p.stock}" id="editStock-${p.id}" title="Склад">
+          <button onclick="updateProduct(${p.id})">Сохранить</button>
+        </div>` : ''}
+        ${canDel ? `
+        <button class="btn-ghost" style="margin-top:6px;color:var(--rust);border-color:var(--rust);" onclick="event.stopPropagation();deleteProduct(${p.id})">Удалить товар</button>` : ''}
+      </div>
+    `;
+    }).join('');
+  }
+
+  function updateProduct(id){
+    if(!canManageProducts()){ showToast('Недостаточно прав', 'error'); return; }
+    const p = state.products.find(x => x.id === id);
+    if(!p) return;
+    let price = parseInt(document.getElementById('editPrice-' + id).value, 10);
+    let stock = parseInt(document.getElementById('editStock-' + id).value, 10);
+    if(!price || price < 1){ showToast('Некорректная цена', 'error'); return; }
+    if(isNaN(stock) || stock < 0) stock = 0;
+    if(stock > 99999) stock = 99999;
+
+    const oldPrice = p.price, oldStock = p.stock;
+    p.price = price;
+    p.stock = stock;
+    saveState();
+    renderCatalog();
+    logEvent(currentUser.nick, `изменил «${p.name}»: цена ${oldPrice.toLocaleString('ru-RU')}→${price.toLocaleString('ru-RU')} ₽, склад ${oldStock}→${stock} шт.`);
+    logAdmin(`изменил товар «${p.name}» (цена ${oldPrice}→${price}, склад ${oldStock}→${stock})`);
+    showToast('Товар обновлён', 'success');
+  }
+
+  let pendingConfirmCallback = null;
+
+  function showConfirm(message, callback){
+    document.getElementById('confirmText').textContent = message;
+    pendingConfirmCallback = callback;
+    document.getElementById('confirmOverlay').classList.remove('hidden');
+  }
+  function confirmYes(){
+    document.getElementById('confirmOverlay').classList.add('hidden');
+    const cb = pendingConfirmCallback;
+    pendingConfirmCallback = null;
+    if(cb) cb();
+  }
+  function confirmNo(){
+    document.getElementById('confirmOverlay').classList.add('hidden');
+    pendingConfirmCallback = null;
+  }
+
+  function deleteProduct(id){
+    if(!canDeleteProducts()){ showToast('Только владелец и главный админ могут удалять', 'error'); return; }
+    const p = state.products.find(x => x.id === id);
+    if(!p) return;
+    showConfirm(`Удалить «${p.name}» из каталога?`, () => {
+      state.products = state.products.filter(x => x.id !== id);
+      saveState();
+      renderCatalog();
+      logEvent(currentUser.nick, `удалил «${p.name}» из каталога`);
+      logAdmin(`удалил товар «${p.name}»`);
+      showToast('Товар удалён', 'success');
+      if(document.getElementById('admin-sub-products').style.display !== 'none') renderAdminProducts();
+    });
+  }
+
+  function addToCart(productId){
+    if(!requireLogin()) return;
+    const p = state.products.find(x => x.id === productId);
+    if(!p || p.stock <= 0){ showToast('Товара нет в наличии', 'error'); return; }
+    if(p.sellerKey && currentUser && p.sellerKey === currentUser.key){
+      showToast('Нельзя купить свой же товар', 'error');
+      return;
+    }
+    const qtyInput = document.getElementById('qty-' + productId);
+    let qty = parseInt(qtyInput.value, 10);
+    if(!qty || qty < 1) qty = 1;
+    const cap = Math.min(9999, p.stock);
+    if(qty > cap) qty = cap;
+
+    const existing = cart.find(i => i.productId === productId);
+    if(existing){ existing.qty += qty; }
+    else{ cart.push({ productId, name:p.name, price:p.price, qty }); }
+
+    renderCart();
+    logEvent('Система', `добавлено в корзину «${p.name}» (${qty} шт.)`);
+    showToast('Добавлено в корзину 🛒', 'success');
+  }
+
+  function renderCart(){
+    const list = document.getElementById('cartList');
+    const totalEl = document.getElementById('cartTotal');
+    const countEl = document.getElementById('cartCount');
+
+    const totalQty = cart.reduce((s,i)=> s + i.qty, 0);
+    const totalPrice = cart.reduce((s,i)=> s + i.qty * i.price, 0);
+    countEl.textContent = totalQty;
+    totalEl.textContent = totalPrice.toLocaleString('ru-RU') + ' ₽';
+
+    if(cart.length === 0){
+      list.innerHTML = '<p class="empty">Пока пусто.</p>';
+      return;
+    }
+
+    list.innerHTML = cart.map(i => `
+      <div class="cart-line">
+        <span>${esc(i.name)} · ${i.qty} шт. · ${(i.qty*i.price).toLocaleString('ru-RU')} ₽</span>
+        <div class="cart-actions">
+          <button onclick="cartChangeQty(${i.productId}, -1)">Удалить 1</button>
+          <button onclick="cartChangeQty(${i.productId}, 1)">Добавить 1</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function cartChangeQty(productId, delta){
+    const item = cart.find(i => i.productId === productId);
+    if(!item) return;
+    item.qty += delta;
+    if(delta < 0) logEvent('Корзина', `−1 «${item.name}»`);
+    else logEvent('Корзина', `+1 «${item.name}»`);
+    if(item.qty <= 0){ cart = cart.filter(i => i.productId !== productId); }
+    renderCart();
+  }
+
+  function checkout(){
+    if(!requireLogin()) return;
+    if(cart.length === 0){ showToast('Корзина пуста', 'error'); return; }
+    const total = cart.reduce((s,i)=> s + i.qty * i.price, 0);
+    document.getElementById('payTotalLabel').textContent = total.toLocaleString('ru-RU') + ' ₽';
+    document.getElementById('payOverlay').classList.remove('hidden');
+  }
+
+  function closePay(){
+    document.getElementById('payOverlay').classList.add('hidden');
+  }
+
+  let productModalId = null;
+  let selectedStars = 5;
+
+  function starsHtml(rating){
+    const r = Math.max(1, Math.min(5, rating || 0));
+    return '★'.repeat(r) + '☆'.repeat(5 - r);
+  }
+
+  function openProduct(id, focus){
+    const p = state.products.find(x => x.id === id);
+    if(!p) return;
+    productModalId = id;
+    selectedStars = 5;
+    const reviews = Array.isArray(p.reviews) ? p.reviews : [];
+    const reviewsHtml = reviews.length
+      ? reviews.map(r => {
+          const bad = (r.rating || 0) <= 2;
+          return `<div class="review-mini${bad ? ' bad' : ''}">
+            <div class="rm-head"><strong>${esc(r.name || 'Аноним')}</strong><span class="rm-stars">${starsHtml(r.rating)}</span></div>
+            <div>${esc(r.text || '')}</div>
+          </div>`;
+        }).join('')
+      : '<p class="empty">Отзывов пока нет. Будьте первым!</p>';
+
+    const body = document.getElementById('productModalBody');
+    body.innerHTML = `
+      <span class="cat-badge">${esc(p.category || 'Другое')}</span>
+      <h3 class="serif">${esc(p.name)}</h3>
+      ${p.description ? `<p style="opacity:0.8;margin:0 0 8px;">${esc(p.description)}</p>` : ''}
+      <div class="price" style="font-family:'PT Serif',serif;font-weight:700;font-size:1.15rem;">${p.price.toLocaleString('ru-RU')} ₽</div>
+      <p class="hint">В наличии: ${p.stock.toLocaleString('ru-RU')} шт.${p.seller ? ` · продавец: ${esc(p.seller)}` : ''}</p>
+      <p class="hint">При продаже продавец получает 70%, площадка — 30%</p>
+      <h3 class="serif" style="font-size:1.05rem;margin:16px 0 8px;">Отзывы (${reviews.length})</h3>
+      <div id="productReviewsList">${reviewsHtml}</div>
+      <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;">
+        <h3 class="serif" style="font-size:1.05rem;margin:0 0 8px;">Добавить отзыв</h3>
+        <div class="stars-row" id="starPicker">
+          ${[1,2,3,4,5].map(n => `<button type="button" class="star-btn${n <= 5 ? ' on' : ''}" data-n="${n}" onclick="pickStar(${n})">★</button>`).join('')}
+        </div>
+        <textarea id="reviewText" placeholder="Напишите отзыв…" style="width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:3px;background:var(--page-bg);color:var(--page-fg);min-height:70px;resize:vertical;margin-bottom:8px;"></textarea>
+        <button class="btn" onclick="submitReview()">Отправить отзыв</button>
+      </div>
+    `;
+    document.getElementById('productOverlay').classList.remove('hidden');
+    if(focus === 'add'){
+      setTimeout(() => document.getElementById('reviewText')?.focus(), 100);
+    }
+  }
+
+  function closeProduct(){
+    document.getElementById('productOverlay').classList.add('hidden');
+    productModalId = null;
+  }
+
+  function pickStar(n){
+    selectedStars = n;
+    document.querySelectorAll('#starPicker .star-btn').forEach(btn => {
+      const v = parseInt(btn.dataset.n, 10);
+      btn.classList.toggle('on', v <= n);
+    });
+  }
+
+  function submitReview(){
+    if(!requireLogin()) return;
+    if(!productModalId) return;
+    const p = state.products.find(x => x.id === productModalId);
+    if(!p) return;
+    const text = (document.getElementById('reviewText')?.value || '').trim();
+    if(!text){ showToast('Напишите текст отзыва', 'error'); return; }
+    if(!Array.isArray(p.reviews)) p.reviews = [];
+    p.reviews.push({ name: currentUser.nick, rating: selectedStars, text });
+    saveState();
+    logEvent(currentUser.nick, `оставил отзыв (${selectedStars}★) на «${p.name}»`);
+    showToast('Отзыв добавлен', 'success');
+    openProduct(productModalId, 'reviews');
+    renderCatalog();
+  }
+
+  function openAskQuestion(){
+    if(!requireLogin()) return;
+    document.getElementById('askText').value = '';
+    document.getElementById('askOverlay').classList.remove('hidden');
+  }
+  function closeAsk(){
+    document.getElementById('askOverlay').classList.add('hidden');
+  }
+  function submitQuestion(){
+    if(!requireLogin()) return;
+    const text = (document.getElementById('askText')?.value || '').trim();
+    if(!text){ showToast('Напишите вопрос', 'error'); return; }
+    state.questions = state.questions || [];
+    state.questions.unshift({
+      id: state.nextQId++,
+      nick: currentUser.nick,
+      text,
+      time: nowTime(),
+      answer: null,
+      answerBy: null
+    });
+    saveState();
+    logEvent(currentUser.nick, 'задал вопрос админам');
+    closeAsk();
+    showToast('Вопрос отправлен админам', 'success');
+    renderQuestions();
+  }
+
+  function renderQuestions(){
+    const countEl = document.getElementById('qCount');
+    if(countEl) countEl.textContent = (state.questions || []).filter(q => !q.answer).length;
+    const list = document.getElementById('questionsList');
+    if(!list) return;
+    if(!canAnswerQuestions()){
+      list.innerHTML = '<p class="empty">Нет доступа.</p>';
+      return;
+    }
+    const qs = state.questions || [];
+    if(qs.length === 0){
+      list.innerHTML = '<p class="empty">Вопросов нет.</p>';
+      return;
+    }
+    list.innerHTML = qs.map(q => `
+      <div class="q-item">
+        <div class="q-meta">${esc(q.nick)} · ${esc(q.time || '')}</div>
+        <div><strong>Вопрос:</strong> ${esc(q.text)}</div>
+        ${q.answer
+          ? `<div class="q-answer"><strong>${esc(q.answerBy || 'Админ')}:</strong> ${esc(q.answer)}</div>`
+          : `<div class="form-box" style="margin-top:8px;max-width:100%;">
+              <textarea id="ans-${q.id}" placeholder="Ответ…" style="padding:10px;border:1px solid var(--line);border-radius:3px;background:var(--page-bg);color:var(--page-fg);min-height:50px;"></textarea>
+              <button class="btn" onclick="answerQuestion(${q.id})">Ответить</button>
+            </div>`}
+      </div>
+    `).join('');
+  }
+
+  function answerQuestion(id){
+    if(!canAnswerQuestions()) return;
+    const q = (state.questions || []).find(x => x.id === id);
+    if(!q) return;
+    const text = (document.getElementById('ans-' + id)?.value || '').trim();
+    if(!text){ showToast('Напишите ответ', 'error'); return; }
+    q.answer = text;
+    q.answerBy = currentUser.nick;
+    saveState();
+    logEvent(currentUser.nick, `ответил на вопрос от ${q.nick}`);
+    logAdmin(`ответил на вопрос #${id} от ${q.nick}`);
+    showToast('Ответ отправлен', 'success');
+    renderQuestions();
+  }
+
+  // Комиссия площадки 30%, продавцу 70%
+  const SELLER_SHARE = 0.70;
+  const PLATFORM_FEE = 0.30;
+
+  function ensureUserBalance(key, displayNick){
+    if(!key) return null;
+    if(!state.users[key]){
+      state.users[key] = { role: 'user', balance: 0, blocked: false, pass: '', registeredAt: Date.now() };
+    }
+    if(typeof state.users[key].balance !== 'number' || isNaN(state.users[key].balance)){
+      state.users[key].balance = 0;
+    }
+    return state.users[key];
+  }
+
+  function creditSeller(sellerKey, amount, productName, qty){
+    if(!sellerKey || amount <= 0) return;
+    // Не платим самому себе при покупке своего товара
+    if(currentUser && sellerKey === currentUser.key) return;
+    const u = ensureUserBalance(sellerKey);
+    if(!u) return;
+    if(u.balance === Infinity) return;
+    u.balance = Math.round((u.balance + amount) * 100) / 100;
+    // если продавец сейчас в этой же вкладке — сразу обновить шапку
+    if(currentUser && currentUser.key === sellerKey){
+      currentUser.balance = u.balance;
+      renderUserBox();
+    }
+  }
+
+  function completePayment(method){
+    if(!requireLogin()) return;
+    if(cart.length === 0){ showToast('Корзина пуста', 'error'); closePay(); return; }
+    // защита: убрать свои товары из корзины
+    const ownIds = cart.filter(i => {
+      const p = state.products.find(x => x.id === i.productId);
+      return p && p.sellerKey && p.sellerKey === currentUser.key;
+    }).map(i => i.productId);
+    if(ownIds.length){
+      cart = cart.filter(i => ownIds.indexOf(i.productId) < 0);
+      renderCart();
+      showToast('Свои товары убраны из корзины', 'error');
+      if(cart.length === 0){ closePay(); return; }
+    }
+    const total = cart.reduce((s,i)=> s + i.qty * i.price, 0);
+
+    if(method === 'Баланс'){
+      if(currentUser.balance !== Infinity && total > currentUser.balance){
+        showToast('Недостаточно средств на балансе', 'error');
+        return;
+      }
+    }
+
+    const names = cart.map(i => i.name).join(', ');
+    let sellerPaid = 0;
+    let feeTotal = 0;
+
+    cart.forEach(item => {
+      const p = state.products.find(x => x.id === item.productId);
+      if(p){ p.stock = Math.max(0, p.stock - item.qty); }
+      const line = item.qty * item.price;
+      const toSeller = Math.round(line * SELLER_SHARE);
+      const toPlatform = line - toSeller;
+      feeTotal += toPlatform;
+      if(p && p.sellerKey){
+        creditSeller(p.sellerKey, toSeller, p.name, item.qty);
+        sellerPaid += toSeller;
+      } else {
+        // товар без продавца — всё площадке
+        feeTotal += toSeller;
+      }
+    });
+
+    state.platformBalance = (state.platformBalance || 0) + feeTotal;
+
+    // Списание с покупателя (баланс) — всегда учитываем для демо; для внешних методов тоже списываем с баланса если хватает, иначе только «оплачено»
+    if(currentUser.balance !== Infinity){
+      if(method === 'Баланс' || currentUser.balance >= total){
+        currentUser.balance -= total;
+        if(state.users[currentUser.key]) state.users[currentUser.key].balance = currentUser.balance;
+      }
+    }
+
+    saveState();
+    renderCatalog();
+    renderUserBox();
+    closePay();
+    logEvent('🚚 Заказ', `${currentUser.nick} оплатил через ${method}: ${names} на ${total.toLocaleString('ru-RU')} ₽ · продавцам ${sellerPaid.toLocaleString('ru-RU')} ₽ · комиссия 30%: ${feeTotal.toLocaleString('ru-RU')} ₽`);
+    playTruckAnim();
+    showToast('🚚 Оплачено! Продавцу 70%, площадке 30%', 'success');
+    cart = [];
+    renderCart();
+  }
+
+  function publishItem(){
+    if(!requireLogin()) return;
+    const name = document.getElementById('pubName').value.trim();
+    const description = document.getElementById('pubDesc').value.trim();
+    const price = parseInt(document.getElementById('pubPrice').value, 10);
+    let stock = parseInt(document.getElementById('pubStock').value, 10);
+    let category = document.getElementById('pubCategory')?.value || 'Другое';
+    if(CATEGORIES.indexOf(category) < 0) category = 'Другое';
+    const fileInput = document.getElementById('pubImage');
+
+    if(!name || !price || price < 1){
+      showToast('Заполните название и цену', 'error');
+      return;
+    }
+    if(!stock || stock < 1000) stock = 1000;
+    if(stock > 99999) stock = 99999;
+
+    const file = fileInput.files && fileInput.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = (e) => finishPublish(name, description, price, stock, e.target.result, category);
+      reader.readAsDataURL(file);
+    } else {
+      finishPublish(name, description, price, stock, '', category);
+    }
+  }
+
+  function finishPublish(name, description, price, stock, image, category){
+    const seller = currentUser.nick;
+    const sellerKey = currentUser.key;
+    category = category || 'Другое';
+    if(canManageProducts()){
+      const p = { id: state.nextId++, name, price, stock, description, image, reviews: [], seller, sellerKey, category };
+      state.products.push(p);
+      saveState();
+      renderCatalog(true);
+      logEvent('Система', `предмет «${name}» добавлен (продавец: ${seller})`);
+      logAdmin(`опубликовал товар «${name}»`);
+      playTruckAnim();
+      showToast('Товар опубликован 🚚 · при продаже вы получите 70%', 'success');
+    } else {
+      const req = { id: state.nextReqId++, nick: currentUser.nick, name, price, stock, description, image, seller, sellerKey, category };
+      state.pendingRequests.push(req);
+      saveState();
+      renderRequests();
+      logEvent(currentUser.nick, `хочет опубликовать «${name}» за ${price.toLocaleString('ru-RU')} ₽`);
+      showToast('Заявка отправлена · после продажи вы получите 70%', 'success');
+    }
+
+    document.getElementById('pubName').value = '';
+    document.getElementById('pubDesc').value = '';
+    document.getElementById('pubPrice').value = '';
+    document.getElementById('pubStock').value = '';
+    document.getElementById('pubImage').value = '';
+  }
+
+  function renderRequests(){
+    document.getElementById('reqCount').textContent = state.pendingRequests.length;
+    const list = document.getElementById('requestsList');
+    if(!canModerateRequests()){
+      list.innerHTML = '<p class="empty">Нет доступа.</p>';
+      return;
+    }
+    if(state.pendingRequests.length === 0){
+      list.innerHTML = '<p class="empty">Заявок нет.</p>';
+      return;
+    }
+    list.innerHTML = state.pendingRequests.map(r => `
+      <div class="req-item">
+        <span>${esc(r.nick)} — «${esc(r.name)}» за ${r.price.toLocaleString('ru-RU')} ₽, ${(r.stock || 1).toLocaleString('ru-RU')} шт.</span>
+        <div class="req-actions">
+          <button class="accept" onclick="resolveRequest(${r.id}, true)">Принять</button>
+          <button class="decline" onclick="resolveRequest(${r.id}, false)">Отклонить</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function resolveRequest(reqId, accept){
+    if(!canModerateRequests()) return;
+    const req = state.pendingRequests.find(r => r.id === reqId);
+    if(!req) return;
+    state.pendingRequests = state.pendingRequests.filter(r => r.id !== reqId);
+
+    if(accept){
+      state.products.push({
+        id: state.nextId++,
+        name: req.name,
+        price: req.price,
+        stock: req.stock || 1000,
+        description: req.description || '',
+        image: req.image || '',
+        reviews: [],
+        seller: req.seller || req.nick || 'Гость',
+        sellerKey: req.sellerKey || String(req.nick || '').toLowerCase(),
+        category: req.category || 'Другое'
+      });
+      saveState();
+      renderCatalog(true);
+      logEvent(currentUser.nick, `принял заявку «${req.name}»`);
+      logEvent('Система', `предмет «${req.name}» добавлен`);
+      logAdmin(`принял заявку «${req.name}» от ${req.nick}`);
+      playTruckAnim();
+      showToast('Заявка принята 🚚', 'success');
+    } else {
+      saveState();
+      logEvent(currentUser.nick, `отклонил заявку «${req.name}»`);
+      logEvent('Система', `предмет «${req.name}» отклонён`);
+      logAdmin(`отклонил заявку «${req.name}» от ${req.nick}`);
+      showToast('Заявка отклонена', 'error');
+    }
+    renderRequests();
+  }
+
+  // —— Admin panel ——
+  function renderAdminPanel(){
+    showAdminSub(document.querySelector('.subtab.active')?.dataset.sub || 'users');
+  }
+
+  function renderUsersList(){
+    const list = document.getElementById('usersList');
+    if(!canManageUsers()){
+      list.innerHTML = '<p class="empty">Недостаточно прав. Нужен владелец или главный админ.</p>';
+      return;
+    }
+    const keys = Object.keys(state.users);
+    if(keys.length === 0){
+      list.innerHTML = '<p class="empty">Нет зарегистрированных пользователей.</p>';
+      return;
+    }
+    list.innerHTML = keys.map(key => {
+      const u = state.users[key];
+      const role = u.role || state.staff[key] || (FIXED_ACCOUNTS[key] ? FIXED_ACCOUNTS[key].role : 'user');
+      const bal = u.balance === Infinity ? '∞' : (u.balance != null ? Number(u.balance).toLocaleString('ru-RU') : '—');
+      const isFixed = !!FIXED_ACCOUNTS[key];
+      return `
+        <div class="user-row">
+          <span>
+            <strong>${esc(key)}</strong>
+            <span class="role-badge ${roleClass(role)}">${roleLabel(role)}</span>
+            ${u.blocked ? '<span class="blocked-tag"> ЗАБЛОКИРОВАН</span>' : ''}
+            <span class="hint" style="margin:0;display:inline;"> · баланс ${bal}</span>
+          </span>
+          <div class="user-actions">
+            ${!isFixed || currentUser.role === 'owner' ? (
+              u.blocked
+                ? `<button class="unblock" onclick="setBlocked('${esc(key)}', false)">Разблокировать</button>`
+                : `<button class="block" onclick="setBlocked('${esc(key)}', true)">Заблокировать</button>`
+            ) : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function setBlocked(nickKey, blocked){
+    if(!canManageUsers()){ showToast('Недостаточно прав', 'error'); return; }
+    if(FIXED_ACCOUNTS[nickKey] && currentUser.role !== 'owner'){
+      showToast('Нельзя блокировать фиксированные аккаунты', 'error');
+      return;
+    }
+    if(nickKey === currentUser.key){ showToast('Нельзя блокировать себя', 'error'); return; }
+    if(!state.users[nickKey]) state.users[nickKey] = { role:'user', balance:1000, blocked:false };
+    state.users[nickKey].blocked = blocked;
+    saveState();
+    logEvent(currentUser.nick, `${blocked ? 'заблокировал' : 'разблокировал'} пользователя ${nickKey}`);
+    logAdmin(`${blocked ? 'заблокировал' : 'разблокировал'} ${nickKey}`);
+    showToast(blocked ? 'Пользователь заблокирован' : 'Пользователь разблокирован', blocked ? 'error' : 'success');
+    renderUsersList();
+  }
+
+  function fillRoleSelect(){
+    const sel = document.getElementById('newAdminRole');
+    if(!sel) return;
+    const opts = [
+      ['admin', 'Админ'],
+      ['mainadmin', 'Главный админ'],
+      ['user', 'Пользователь']
+    ];
+    Object.keys(state.ranks || {}).forEach(id => {
+      opts.push([id, state.ranks[id].name + ' (звание)']);
+    });
+    sel.innerHTML = opts.map(([v,t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+  }
+
+  function renderRanksList(){
+    const list = document.getElementById('ranksList');
+    const form = document.getElementById('createRankForm');
+    if(!list) return;
+    if(!canManageAdmins()){
+      list.innerHTML = '<p class="empty">Создавать звания могут только владельцы.</p>';
+      if(form) form.style.display = 'none';
+      return;
+    }
+    if(form) form.style.display = '';
+    const ids = Object.keys(state.ranks || {});
+    if(ids.length === 0){
+      list.innerHTML = '<p class="empty">Пока нет пользовательских званий.</p>';
+      return;
+    }
+    list.innerHTML = ids.map(id => {
+      const r = state.ranks[id];
+      const p = r.perms || {};
+      const flags = [
+        p.products && 'товары',
+        p.deleteProducts && 'удаление',
+        p.requests && 'заявки',
+        p.users && 'юзеры',
+        p.questions && 'вопросы',
+        p.admins && 'админы'
+      ].filter(Boolean).join(', ') || 'без прав';
+      return `<div class="admin-row">
+        <span>
+          <span class="role-badge role-custom" style="background:${esc(r.color || '#1e4b43')};color:#fff;">${esc(r.name)}</span>
+          <span class="hint" style="margin:0;"> · ${esc(flags)}</span>
+        </span>
+        <div class="admin-actions">
+          <button class="decline" onclick="deleteRank('${esc(id)}')">Удалить звание</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function createRank(){
+    if(!canManageAdmins()){ showToast('Только владелец', 'error'); return; }
+    const name = (document.getElementById('rankName')?.value || '').trim();
+    if(!name){ showToast('Укажите название звания', 'error'); return; }
+    const color = document.getElementById('rankColor')?.value || '#1e4b43';
+    const id = 'rank_' + name.toLowerCase().replace(/\s+/g,'_').replace(/[^\wа-яё_]/gi,'') + '_' + Date.now().toString(36);
+    state.ranks = state.ranks || {};
+    state.ranks[id] = {
+      name,
+      color,
+      perms: {
+        products: !!document.getElementById('rk_products')?.checked,
+        deleteProducts: !!document.getElementById('rk_delete')?.checked,
+        requests: !!document.getElementById('rk_requests')?.checked,
+        users: !!document.getElementById('rk_users')?.checked,
+        questions: !!document.getElementById('rk_questions')?.checked,
+        admins: !!document.getElementById('rk_admins')?.checked
+      }
+    };
+    saveState();
+    logEvent(currentUser.nick, `создал звание «${name}»`);
+    logAdmin(`создал звание «${name}»`);
+    showToast('Звание создано', 'success');
+    document.getElementById('rankName').value = '';
+    renderRightsPanel();
+  }
+
+  function deleteRank(id){
+    if(!canManageAdmins()) return;
+    const r = state.ranks[id];
+    if(!r) return;
+    showConfirm(`Удалить звание «${r.name}»? У пользователей с ним станет роль «Пользователь».`, () => {
+      delete state.ranks[id];
+      Object.keys(state.staff || {}).forEach(k => {
+        if(state.staff[k] === id) delete state.staff[k];
+      });
+      Object.keys(state.users || {}).forEach(k => {
+        if(state.users[k].role === id) state.users[k].role = 'user';
+      });
+      saveState();
+      logAdmin(`удалил звание «${r.name}»`);
+      showToast('Звание удалено', 'success');
+      renderRightsPanel();
+      renderUsersList();
+    });
+  }
+
+  function renderRightsPanel(){
+    const list = document.getElementById('adminsList');
+    const form = document.getElementById('addAdminForm');
+    const hint = document.getElementById('rightsHint');
+    if(!canManageAdmins()){
+      list.innerHTML = '<p class="empty">Только владелец может управлять администраторами и званиями.</p>';
+      if(form) form.style.display = 'none';
+      if(hint) hint.textContent = 'Недостаточно прав.';
+      renderRanksList();
+      return;
+    }
+    if(form) form.style.display = '';
+    if(hint) hint.textContent = 'Назначьте звание или роль. Фиксированные аккаунты (владелец и т.д.) нельзя снять.';
+    fillRoleSelect();
+
+    const rows = [];
+    Object.keys(FIXED_ACCOUNTS).forEach(key => {
+      rows.push({ key, role: FIXED_ACCOUNTS[key].role, fixed: true });
+    });
+    Object.keys(state.staff || {}).forEach(key => {
+      if(!FIXED_ACCOUNTS[key]) rows.push({ key, role: state.staff[key], fixed: false });
+    });
+    Object.keys(state.users || {}).forEach(key => {
+      if(FIXED_ACCOUNTS[key] || state.staff[key]) return;
+      const role = state.users[key].role;
+      if(role && role !== 'user') rows.push({ key, role, fixed: false });
+    });
+
+    list.innerHTML = rows.map(r => `
+      <div class="admin-row">
+        <span><strong>${esc(r.key)}</strong> <span class="role-badge ${roleClass(r.role)}" ${state.ranks[r.role] ? `style="background:${esc(state.ranks[r.role].color)};color:#fff;"` : ''}>${roleLabel(r.role)}</span>${r.fixed ? ' <span class="hint">(фиксированный)</span>' : ''}</span>
+        <div class="admin-actions">
+          ${!r.fixed ? `<button class="decline" onclick="removeStaff('${esc(r.key)}')">Снять права</button>` : ''}
+        </div>
+      </div>
+    `).join('') || '<p class="empty">Нет дополнительных сотрудников.</p>';
+    renderRanksList();
+  }
+
+  function addStaff(){
+    if(!canManageAdmins()){ showToast('Только владелец', 'error'); return; }
+    const nickRaw = document.getElementById('newAdminNick').value.trim();
+    if(!nickRaw){ showToast('Укажите ник', 'error'); return; }
+    const key = nickRaw.toLowerCase();
+    const role = document.getElementById('newAdminRole').value;
+    if(FIXED_ACCOUNTS[key]){ showToast('Этот аккаунт фиксированный', 'error'); return; }
+    const allowed = role === 'admin' || role === 'mainadmin' || role === 'user' || (state.ranks && state.ranks[role]);
+    if(!allowed){ showToast('Некорректная роль', 'error'); return; }
+
+    if(role === 'user'){
+      delete state.staff[key];
+      if(!state.users[key]) state.users[key] = { role:'user', balance:1000, blocked:false, pass:'' };
+      else state.users[key].role = 'user';
+    } else {
+      state.staff[key] = role;
+      if(!state.users[key]) state.users[key] = { role, balance: role === 'mainadmin' ? 2000000 : 1000000, blocked: false, pass: '' };
+      else {
+        state.users[key].role = role;
+        if(state.users[key].balance == null) state.users[key].balance = role === 'mainadmin' ? 2000000 : 1000000;
+      }
+    }
+    saveState();
+    logEvent(currentUser.nick, `назначил ${nickRaw} → ${roleLabel(role)}`);
+    logAdmin(`назначил ${key} → ${roleLabel(role)}`);
+    showToast('Звание назначено', 'success');
+    document.getElementById('newAdminNick').value = '';
+    renderRightsPanel();
+    renderUsersList();
+  }
+
+  function removeStaff(key){
+    if(!canManageAdmins()) return;
+    if(FIXED_ACCOUNTS[key]){ showToast('Нельзя снять фиксированный аккаунт', 'error'); return; }
+    showConfirm(`Снять права у «${key}»?`, () => {
+      delete state.staff[key];
+      if(state.users[key]) state.users[key].role = 'user';
+      saveState();
+      logEvent(currentUser.nick, `снял права с ${key}`);
+      logAdmin(`снял права с ${key}`);
+      showToast('Права сняты', 'success');
+      renderRightsPanel();
+      renderUsersList();
+    });
+  }
+
+  function renderAdminLog(){
+    const list = document.getElementById('adminLogList');
+    if(!isStaff()){
+      list.innerHTML = '<p class="empty">Нет доступа.</p>';
+      return;
+    }
+    if(state.adminLog.length === 0){
+      list.innerHTML = '<p class="empty">Записей пока нет.</p>';
+      return;
+    }
+    list.innerHTML = state.adminLog.map(l => `
+      <div class="log-line">
+        <span><strong>${esc(l.nick)}</strong> — ${esc(l.action)}</span>
+        <span class="log-meta">${esc(l.time)}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderAdminProducts(){
+    const list = document.getElementById('adminProductsList');
+    const hint = document.getElementById('platformBalanceHint');
+    if(hint) hint.textContent = 'Комиссия площадки (30%): ' + (state.platformBalance || 0).toLocaleString('ru-RU') + ' ₽';
+    if(!canManageProducts()){
+      list.innerHTML = '<p class="empty">Нет доступа.</p>';
+      return;
+    }
+    if(state.products.length === 0){
+      list.innerHTML = '<p class="empty">Товаров нет.</p>';
+      return;
+    }
+    list.innerHTML = state.products.map(p => `
+      <div class="admin-row">
+        <span>${esc(p.name)} · ${p.price.toLocaleString('ru-RU')} ₽ · склад ${p.stock.toLocaleString('ru-RU')}${p.seller ? ` · ${esc(p.seller)}` : ''}</span>
+        <div class="admin-actions">
+          ${canDeleteProducts() ? `<button class="decline" onclick="deleteProduct(${p.id})">Удалить</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // —— Настоящие HTTP cookies ——
+  function setCookie(name, value, days){
+    try{
+      const maxAge = typeof days === 'number' ? Math.floor(days * 86400) : 86400 * 365;
+      let str = name + '=' + encodeURIComponent(String(value))
+        + '; Path=/'
+        + '; Max-Age=' + maxAge
+        + '; SameSite=Lax';
+      if(typeof location !== 'undefined' && location.protocol === 'https:'){
+        str += '; Secure';
+      }
+      document.cookie = str;
+    }catch(e){}
+  }
+  function getCookie(name){
+    try{
+      const parts = document.cookie ? document.cookie.split(';') : [];
+      for(let i = 0; i < parts.length; i++){
+        const p = parts[i].trim();
+        if(p.indexOf(name + '=') === 0){
+          return decodeURIComponent(p.substring(name.length + 1));
+        }
+      }
+      return null;
+    }catch(e){ return null; }
+  }
+  function deleteCookie(name){
+    try{
+      document.cookie = name + '=; Path=/; Max-Age=0; SameSite=Lax';
+      if(typeof location !== 'undefined' && location.protocol === 'https:'){
+        document.cookie = name + '=; Path=/; Max-Age=0; SameSite=Lax; Secure';
+      }
+    }catch(e){}
+  }
+
+  function acceptCookies(){
+    setCookie('vsyorynok_consent', '1', 365);
+    storageSet('vsyorynok_consent', '1');
+    if(currentUser) setCookie('vsyorynok_uid', currentUser.nick, 30);
+    const b = document.getElementById('cookieBanner');
+    if(b) b.classList.remove('show');
+    showToast('Cookies приняты', 'success');
+  }
+  function rejectCookies(){
+    setCookie('vsyorynok_consent', '0', 365);
+    storageSet('vsyorynok_consent', '0');
+    deleteCookie('vsyorynok_uid');
+    const b = document.getElementById('cookieBanner');
+    if(b) b.classList.remove('show');
+    showToast('Только необходимые cookies', 'success');
+  }
+  function resetCookieConsent(){
+    deleteCookie('vsyorynok_consent');
+    deleteCookie('vsyorynok_theme');
+    deleteCookie('vsyorynok_uid');
+    try{ storageSet('vsyorynok_consent', ''); }catch(e){}
+    const b = document.getElementById('cookieBanner');
+    if(b) b.classList.add('show');
+    showToast('Согласие сброшено', 'success');
+  }
+  function showCookieBannerIfNeeded(){
+    const c = getCookie('vsyorynok_consent') || storageGet('vsyorynok_consent');
+    if(c === '1' || c === '0') return;
+    const b = document.getElementById('cookieBanner');
+    if(b) b.classList.add('show');
+  }
+
+  function fillPromoTargets(){
+    const sel = document.getElementById('promoTarget');
+    if(!sel || !currentUser) return;
+    const role = currentUser.role;
+    const opts = [];
+    if(role === 'user'){
+      opts.push(['admin', 'В администрацию (Админ)']);
+      opts.push(['mainadmin', 'В администрацию (Главный админ)']);
+    } else if(role === 'admin' || (state.ranks && state.ranks[role])){
+      opts.push(['mainadmin', 'Повышение → Главный админ']);
+      if(role !== 'admin') opts.push(['admin', 'Перейти в роль Админ']);
+    } else if(role === 'mainadmin'){
+      opts.push(['owner', 'Запрос владельцу (особый статус)']);
+    }
+    Object.keys(state.ranks || {}).forEach(id => {
+      if(id === role) return;
+      opts.push([id, 'Вступить в звание: ' + state.ranks[id].name]);
+    });
+    if(opts.length === 0){
+      sel.innerHTML = '<option value="">Нет доступных заявок для вашей роли</option>';
+      return;
+    }
+    sel.innerHTML = opts.map(([v,t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+  }
+
+  function submitPromoRequest(){
+    if(!requireLogin()) return;
+    if(isOwner()){ showToast('Владелец уже наверху', 'error'); return; }
+    const target = document.getElementById('promoTarget')?.value;
+    const reason = (document.getElementById('promoReason')?.value || '').trim();
+    if(!target){ showToast('Выберите цель заявки', 'error'); return; }
+    if(!reason){ showToast('Напишите, почему вас стоит назначить', 'error'); return; }
+    // Пользователь — только в администрацию (admin/mainadmin) или кастомные звания
+    if(currentUser.role === 'user'){
+      const ok = target === 'admin' || target === 'mainadmin' || (state.ranks && state.ranks[target]);
+      if(!ok){ showToast('Пользователь может проситься только в администрацию или в звание', 'error'); return; }
+    }
+    const dup = (state.promoRequests || []).some(r => r.key === currentUser.key && r.targetRole === target && r.status === 'pending');
+    if(dup){ showToast('Такая заявка уже на рассмотрении', 'error'); return; }
+    state.promoRequests = state.promoRequests || [];
+    state.promoRequests.unshift({
+      id: state.nextPromoId++,
+      nick: currentUser.nick,
+      key: currentUser.key,
+      fromRole: currentUser.role,
+      targetRole: target,
+      reason,
+      time: nowTime(),
+      status: 'pending'
+    });
+    saveState();
+    document.getElementById('promoReason').value = '';
+    showToast('Заявка отправлена владельцам', 'success');
+    renderPromoUI();
+  }
+
+  function renderPromoUI(){
+    fillPromoTargets();
+    const list = document.getElementById('myPromoList');
+    if(list && currentUser){
+      const mine = (state.promoRequests || []).filter(r => r.key === currentUser.key);
+      list.innerHTML = mine.length ? mine.map(r => `
+        <div class="q-item">
+          <div class="q-meta">${esc(r.time)} · ${esc(r.status)}</div>
+          <div><strong>${esc(roleLabel(r.fromRole))}</strong> → <strong>${esc(roleLabel(r.targetRole))}</strong></div>
+          <div style="opacity:0.85;">${esc(r.reason)}</div>
+        </div>
+      `).join('') : '<p class="empty">Пока нет заявок.</p>';
+    }
+    const countEl = document.getElementById('promoCount');
+    if(countEl) countEl.textContent = (state.promoRequests || []).filter(r => r.status === 'pending').length;
+    if(isOwner()) renderPromoReview();
+  }
+
+  function renderPromoReview(){
+    const list = document.getElementById('promoReviewList');
+    const countEl = document.getElementById('promoCount');
+    if(countEl) countEl.textContent = (state.promoRequests || []).filter(r => r.status === 'pending').length;
+    if(!list) return;
+    if(!isOwner()){
+      list.innerHTML = '<p class="empty">Только владелец и со-владелец.</p>';
+      return;
+    }
+    const pending = (state.promoRequests || []).filter(r => r.status === 'pending');
+    if(pending.length === 0){
+      list.innerHTML = '<p class="empty">Заявок нет.</p>';
+      return;
+    }
+    list.innerHTML = pending.map(r => `
+      <div class="req-item">
+        <span>
+          <strong>${esc(r.nick)}</strong>
+          (${esc(roleLabel(r.fromRole))} → ${esc(roleLabel(r.targetRole))})
+          <span class="hint" style="display:block;margin:0;">${esc(r.reason)} · ${esc(r.time)}</span>
+        </span>
+        <div class="req-actions">
+          <button class="accept" onclick="resolvePromo(${r.id}, true)">Принять</button>
+          <button class="decline" onclick="resolvePromo(${r.id}, false)">Отклонить</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function resolvePromo(id, accept){
+    if(!isOwner()){ showToast('Только владелец', 'error'); return; }
+    const r = (state.promoRequests || []).find(x => x.id === id);
+    if(!r || r.status !== 'pending') return;
+    r.status = accept ? 'accepted' : 'rejected';
+    if(accept){
+      if(r.targetRole === 'owner'){
+        showToast('Статус владельца через фиксированный аккаунт', 'error');
+        r.status = 'rejected';
+      } else {
+        state.staff[r.key] = r.targetRole;
+        if(!state.users[r.key]) state.users[r.key] = { role: r.targetRole, balance: 1000, blocked: false, pass: '' };
+        else state.users[r.key].role = r.targetRole;
+        logAdmin(`принял заявку ${r.nick} → ${roleLabel(r.targetRole)}`);
+        showToast('Заявка принята', 'success');
+      }
+    } else {
+      logAdmin(`отклонил заявку ${r.nick}`);
+      showToast('Заявка отклонена', 'error');
+    }
+    saveState();
+    renderPromoReview();
+    renderPromoUI();
+  }
+
+  // init
+  try{
+    const theme = getCookie('vsyorynok_theme') || storageGet('vsyorynok_theme');
+    if(theme === 'dark'){
+      document.body.classList.add('theme-dark');
+      document.getElementById('themeBtn').textContent = '☀';
+    }
+  }catch(e){}
+  renderCatalog();
+  renderCart();
+  renderRequests();
+  renderQuestions();
+  renderPromoUI();
+  showCookieBannerIfNeeded();
+  // авто-подтягивание баланса без F5
+  setInterval(() => {
+    try{
+      const raw = storageGet(STORAGE_KEY);
+      if(raw && raw !== JSON.stringify(state)) applyRemoteState(raw);
+      else syncCurrentUserFromState();
+    }catch(e){}
+  }, 1500);
+</script>
+
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Cookies">
+  <p>Мы используем <strong>cookies</strong> и локальное хранилище: тема оформления, согласие и учебные данные витрины. Рекламу не показываем. Подробнее — во вкладке «О нас».</p>
+  <div class="cookie-actions">
+    <button class="btn-accept" onclick="acceptCookies()">Принять</button>
+    <button class="btn-reject" onclick="rejectCookies()">Только необходимые</button>
+  </div>
+</div>
+
+</body>
+</html>
